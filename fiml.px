@@ -1,0 +1,293 @@
+//
+// Fact Information Modelling Language. A CQL-like dialect
+//
+
+TOP	=
+	?(BOM:bom)
+	*definition
+	-> bom, definition
+
+BOM	=
+	  '\uFEFF'
+
+definition =
+	| concept
+	| fact_type
+	| instance
+	| fact
+	| query_stmt
+
+//
+// Concept rules
+//
+
+concept =
+	'Each' ss name ss 'is' ss (
+		| 'a' ss 'concept'
+		| concept_supertype ?(ss concept_detail)
+		| concept_detail
+	) ?(ss 'instanciated' ss 'by' ss 'for' ss query_body) s '.'
+
+concept_supertype =
+	'a' ss 'kind' ss 'of' ss name
+
+concept_body =
+		| 'identified' ss 'by' ss role_list ?property_list
+		| 'where' ss fact_type ?property_list
+		| 'written' ss 'as' data_type
+
+role_list =
+	'(' s role s +(',' s role s) ')'
+
+property_list =
+	'and' ss 'it' ss property s +(',' s property s)
+
+//
+// Fact type rules
+//
+
+fact_type =
+	reading s +('/' s reading s)
+
+reading =
+	*(pwords ss role ss) pwords ss ?(quantifier ss) role ?(ss pwords)
+
+property =
+	pwords ss ?(quantifier ss) role ?(ss pwords)
+	
+role =
+	name s ?('(' s name s ')')
+	awords ss name
+
+name = 
+	[\U] *[\L\d] *(ss [\U\d] *[\L\d])
+
+pwords =
+	!(| awords | quantifier) +[\L] *(ss !(| awords | quantifier) +[\L])
+
+awords =
+	+[\L] '-' *(ss +[\L])
+
+quantifier =
+	| 'one'
+	| 'at' ss 'most' ss 'one'
+	| 'at' ss 'least' ss 'one'
+	| 'many'
+
+//
+// Instance rules
+//
+
+instance = name s '(' s keyed_literal s *(',' s keyed_literal s) ')'
+
+keyed_literal =
+	key s ':' s literal
+
+key =
+	[\L] *[\L\d] *([_] +[\L\d])
+
+//
+// Fact rules
+//
+
+fact = 
+	*(pwords ss roled_datum ss) pwords ss roled_datum ?(ss pwords)
+
+roled_datum =
+	?(name ss) datum
+
+//
+// Query rules
+//
+
+query =
+	'For' ss query_body
+	
+query_body =	
+	'each' ss path path_cond grouping group_cond selector
+
+path =
+	role_variable *(step)
+
+role_variable =
+	?(name ss) variable
+
+step =
+	pwords ss role_expr ?(ss pwords)
+
+role_expr =
+	?(name ss) expr
+
+path_cond =
+	'where' boolean_expr
+
+grouping =
+	'group' s 'by' s name s *(',' s name)
+
+group_cond =
+	'having' boolean_expr
+
+selector =
+	'select' s '{' keyed_expr s *(',' s keyed_expr s) '}'
+
+keyed_expr =
+	key s ':' s expr
+
+//
+// Data type rules
+//
+
+data_type =
+	| value_type
+	| 'a' ss 'map' ss 'containing' s element_list
+	| 'an' ss 'array' ss 'of' ss data_type
+
+element_list =
+	'{' s role s *( ',' s role s) '}'
+
+value_type =
+
+//
+// Expression rules
+//
+
+expr =
+
+boolean_expr =
+
+term =
+	| datum:term
+	| variable_expr:term
+	| function_call:term
+	-> term
+
+variable =
+	+[\U]
+
+variable_expr =
+	variable *('.' key)
+
+function_call =
+	name '(' s ?(term *(s sep s term) ) ')' s
+	-> name, term
+
+sep =	',' s
+
+comparison_operator =
+	| equalTo:op
+	| notEqualTo:op
+	| lessOrEqual:op
+	| lessThan:op
+	| lessOrGreater:op
+	| greaterOrEqual:op
+	| greaterThan:op
+	-> op
+
+equalTo =
+	'=' ![>]
+
+notEqualTo =
+	| '<>'
+	| '!='
+
+lessThan =
+	'<' !'='
+
+lessOrEqual =
+	| '<='
+
+greaterOrEqual =
+	| '>='
+
+greaterThan =
+	'>' ![=<]
+
+//
+// Datum rules
+//
+
+datum =
+	| value
+	| container
+	| array
+
+value = (
+		| boolean_literal
+		| string
+		| number
+	) s
+
+container =
+	'{' *(|(key:k ':' datum:v *(',' key:k ':' datum:v)) | s) '}'
+	-> k, v
+
+array =
+	'[' (|(datum:e *(',' datum:e)) |s) ']'
+	-> e
+
+boolean_literal =
+	| 'true' !\w s
+	| 'false' !\w s
+
+string =
+	'\'' *(string_char) '\''
+
+string_char =
+	| '\\' [befntr\\']
+	| '\\' [0-7] [0-7] [0-7]
+	| '\\' *[\r] [\n] *[\r]
+	| '\\0'
+	| '\\x' [0-9A-Fa-f] [0-9A-Fa-f]
+	| '\\u' [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f]
+	| !['\x01-\x07\x0A-\x1F] .	// Exclude control characters except tab. Cannot exclude NUL here
+
+number = (
+		| real:number
+		| fractional_real:number
+		| hexnumber:number
+		| octalnumber:number
+	) !\w
+	-> number
+
+real =
+	?[-+] [1-9] *[0-9] ?fraction ?exponent
+
+fractional_real =
+	?[-+] '0' fraction ?exponent
+
+fraction =
+	'.' +[0-9]
+
+exponent =
+	[Ee] ?[-+] +[0-9]
+
+naturalNumber =
+	[1-9] *[0-9]
+
+hexnumber =
+	'0x' +[0-9A-Fa-f]
+
+octalnumber =
+	'0' *[0-7]
+
+
+
+//
+//  Whitespace rules
+//
+
+comment_to_eol =
+  '//' *(!'\n' .)
+
+comment_c_style =
+  '/*' *(!'*/' . ) '*/'
+
+ws =	*(			// Optional space
+	  | +[ \t\n\r]		// one or more spaces
+	  | comment_to_eol
+	  | comment_c_style
+	)
+
+s = *ws		  // Optional space
+
+ss = +ws	  // Mandatory space
