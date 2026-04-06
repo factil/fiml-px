@@ -33,40 +33,44 @@ concept_supertype =
 	'a' ss 'kind' ss 'of' ss name
 
 object_type_concept =
-	| 'identified' ss 'by' s role_list 
+	| 'identified' ss 'by' ss role_list 
 	| 'where' ss fact_type
 
 data_type_concept =
 	'written' ss 'as' data_type
 
 role_list =
-	'(' s role s +(sep role s) ')'
+	'(' s role +(sep role) s ')'
 
 concept_property_list =
-	'and' ss 'it' ss property +(s sep property)
+	'and' ss 'it' ss property +(sep property)
 
 //
 // Fact type rules
 //
 
 fact_type =
-	reading s +('/' s reading s)
+	reading +(s '/' s reading)
 
 reading =
-	*(words ss role ss) words ss ?(quantifier ss) role ?(ss words)
+	*(reading_words ss role ss) reading_words ss ?(quantifier ss) role ?(ss reading_words)
 
 property =
-	words ss ?(quantifier ss) role ?(ss words)
+	reading_words ss ?(quantifier ss) role ?(ss reading_words)
 	
 role =
-	name s ?('(' s name s ')')
-	adjective ss name
+	| name ss ?('(' s name s ')')
+	| adjective ss name
 
 name = 
 	[\U] *[\L\d] *(ss [\U] *[\L\d])
 
-words =
-	!(| adjective | quantifier) +[\L] *(ss !(| adjective | quantifier) +[\L])
+reading_words =
+	!reserved_words +[\L] *(ss !reserved_words +[\L])
+
+reserved_words =
+	| quantifier
+	| adjective
 
 adjective =
 	+[\L] '-' *(ss +[\L])
@@ -82,13 +86,13 @@ quantifier =
 //
 
 instance = 
-	name s ':' s '{' s keyed_datum_list s '}'
+	name ':' ss '{' s keyed_datum_list s '}'
 	
 keyed_datum_list = 	
-	keyed_datum *(s sep keyed_datum)
+	keyed_datum *(sep keyed_datum)
 
 keyed_datum =
-	key s ':' s datum
+	key ':' ss datum
 
 key =
 	[\L] *[\L\d] *([_] [\L] *[\L\d])
@@ -98,7 +102,7 @@ key =
 // //
 
 // fact = 
-// 	*(words ss roled_datum ss) words ss roled_datum ?(ss words)
+// 	*(reading_words ss roled_datum ss) reading_words ss roled_datum ?(ss reading_words)
 
 // roled_datum =
 // 	?(name ss) datum
@@ -120,7 +124,7 @@ variable =
 	+[\U]
 
 step =
-	words ss roled_expression ?(ss words)
+	reading_words ss roled_expression ?(ss reading_words)
 
 roled_expression =
 	?(name ss) expression
@@ -129,22 +133,22 @@ path_control =
 	?(ss where_condition) ?(ss grouping)
 
 where_condition =
-	'where' s boolean_expression
+	'where' ss boolean_expression
 
 grouping =
 	group_by ss ?group_condition
 
 group_by =
-	'group' ss 'by' ss name *(s sep name)
+	'group' ss 'by' ss name *(sep name)
 
 group_condition =
-	'having' s boolean_expression
+	'having' ss boolean_expression
 
 selector =
-	'{' keyed_expression s *(sep keyed_expression s) '}'
+	'{' s keyed_expression *(sep keyed_expression) s '}'
 
 keyed_expression =
-	key s ':' s expression
+	key ':' ss expression
 
 //
 // Generator rules
@@ -154,10 +158,10 @@ with_generators =
 	'with' ss generator_list
 
 generator_list =
-	generator +(s sep generator)
+	generator +(sep generator)
 
 generator =
-	name s ':' s '(' s query s ')'
+	name ':' ss '(' s query s ')'
 
 //
 // Data type rules
@@ -165,11 +169,11 @@ generator =
 
 data_type =
 	| value_type
-	| 'a' ss 'struct' ss 'containing' s element_list
+	| 'a' ss 'struct' ss 'containing' ss element_list
 	| 'an' ss 'array' ss 'of' ss data_type
 
 element_list =
-	'{' s role s *( sep role s) '}'
+	'{' s role *( sep role) s '}'
 
 value_type =
 	builtin_value_type
@@ -190,72 +194,80 @@ expression =
 	| boolean_expression
 
 numeric_expression =
-	numeric_term *((| '+' | '-') numeric_term)
+	numeric_term *(s addition_op s numeric_term)
+
+addition_op =
+	| '+' 
+	| '-'
 
 numeric_term =
-	numeric_factor *((| '*' | '/') numeric_factor)
+	numeric_factor *(s multiplication_op s numeric_factor)
+
+multiplication_op =
+	| '*' 
+	| '/'
 
 numeric_factor =
 	| number
-	| reference
-	| '(' numeric_expression ')'
+	| ?[-+] reference
+	| '(' s numeric_expression s ')'
 
 reference =
-	variable +('.' key)
+	variable *(| '.' key | '[' s numeric_expression s ']')
 
 string_expression =
-	string_term *( '+' string_term)
+	string_term *( s '+' s string_term)
 
 string_term =
 	| string_literal
 	| reference
-	| '(' string_expression ')'
+	| '(' s string_expression s ')'
 
 boolean_expression =
-	and_expression *( 'or' ss and_expression)
+	and_expression *( ss 'or' ss and_expression)
 
 and_expression =
-	not_expression *( 'and' ss not_expression)
+	not_expression *( ss 'and' ss not_expression)
 
 not_expression =
-	?'not' boolean_factor
+	?'not' ss boolean_factor
 
 boolean_factor =
 	| boolean_literal
 	| comparison
-	| reference
-	| '(' boolean_expression ')'
+	| ?('not' ss) reference
+	| '(' s boolean_expression s ')'
 
 comparison =
-	expression s comparison_operator expression
+	expression s comparison_operator s expression
 	-> comparison_operator, expression
 
 comparison_operator =
-	| equalTo:op
-	| notEqualTo:op
-	| lessOrEqual:op
-	| lessThan:op
-	| greaterOrEqual:op
-	| greaterThan:op
+	| equal_to_op:op
+	| not_equal_to_op:op
+	| less_or_equal_op:op
+	| less_than_op:op
+	| greater_or_equal_op:op
+	| greater_than_op:op
 	-> op
 
-equalTo =
+equal_to_op =
 	'=' ![>]
 
-notEqualTo =
+not_equal_to_op =
 	| '<>'
 	| '!='
 
-lessThan =
+less_than_op =
 	'<' !'='
 
-lessOrEqual =
+less_or_equal_op =
 	'<='
 
-greaterOrEqual =
+greater_or_equal_op =
 	'>='
 
-greaterThan =
+greater_than_op =
 	'>' ![=<]
 
 // function_call =
@@ -276,20 +288,20 @@ value = (
 		| boolean_literal:v
 		| string_literal:v
 		| number:v
-	) s
+	)
 	-> v
 
 struct =
-	'{' *(|(key:k ':' datum:v *(',' key:k ':' datum:v)) | s) '}'
+	'{' (|(s key:k ':' ss datum:v *(sep key:k ':' ss datum:v) s) | s) '}'
 	-> k, v
 
 array =
-	'[' (|(datum:e *(',' datum:e)) |s) ']'
+	'[' (|(s datum:e *(sep datum:e) s) |s) ']'
 	-> e
 
 boolean_literal =
-	| 'true':v !\w s
-	| 'false':v !\w s
+	| 'true':v !\w
+	| 'false':v !\w
 	-> v
 
 string_literal =
@@ -306,13 +318,16 @@ string_char =
 	| !['\x01-\x07\x0A-\x1F] .	// Exclude control characters except tab. Cannot exclude NUL here
 
 number = (
-		| natural_number
+		| integer
 		| real:number
 		| fractional_real:number
 		| hex_number:number
 		| octal_number:number
 	) !\w
 	-> number
+
+integer =
+	?[-+] [1-9] *[0-9]
 
 real =
 	?[-+] [1-9] *[0-9] ?fraction ?exponent
@@ -325,9 +340,6 @@ fraction =
 
 exponent =
 	[Ee] ?[-+] +[0-9]
-
-natural_number =
-	[1-9] *[0-9]
 
 hex_number =
 	'0x' +[0-9A-Fa-f]
@@ -355,4 +367,4 @@ s = *ws		  // Optional space
 
 ss = +ws	  // Mandatory space
 
-sep =	sep
+sep =	',' s
