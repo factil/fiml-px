@@ -4,18 +4,19 @@
 
 TOP	=
 	?(BOM:bom)
-	*definition
-	-> bom, definition
+	*statement
+	-> bom, statement
 
 BOM	=
 	  '\uFEFF'
 
-definition =
-	| concept
-	| fact_type
-	| instance
-	| fact
-	| query_stmt
+statement =
+	(
+		| concept
+		| instance
+		| query
+		| generator
+	) s '.'
 
 //
 // Concept rules
@@ -24,23 +25,25 @@ definition =
 concept =
 	'Each' ss name ss 'is' ss (
 		| 'a' ss 'concept'
-		| concept_supertype ?(ss concept_detail)
-		| concept_detail
-	) ?(ss 'instanciated' ss 'by' ss 'for' ss query_body) s '.'
+		| (| concept_supertype | object_type_concept) ?(ss concept_property_list)
+		| data_type_concept
+	)
 
 concept_supertype =
 	'a' ss 'kind' ss 'of' ss name
 
-concept_body =
-		| 'identified' ss 'by' ss role_list ?property_list
-		| 'where' ss fact_type ?property_list
-		| 'written' ss 'as' data_type
+object_type_concept =
+	| 'identified' ss 'by' s role_list 
+	| 'where' ss fact_type
+
+data_type_concept =
+	'written' ss 'as' data_type
 
 role_list =
-	'(' s role s +(',' s role s) ')'
+	'(' s role s +(sep role s) ')'
 
-property_list =
-	'and' ss 'it' ss property s +(',' s property s)
+concept_property_list =
+	'and' ss 'it' ss property +(s sep property)
 
 //
 // Fact type rules
@@ -50,22 +53,22 @@ fact_type =
 	reading s +('/' s reading s)
 
 reading =
-	*(pwords ss role ss) pwords ss ?(quantifier ss) role ?(ss pwords)
+	*(words ss role ss) words ss ?(quantifier ss) role ?(ss words)
 
 property =
-	pwords ss ?(quantifier ss) role ?(ss pwords)
+	words ss ?(quantifier ss) role ?(ss words)
 	
 role =
 	name s ?('(' s name s ')')
-	awords ss name
+	adjective ss name
 
 name = 
-	[\U] *[\L\d] *(ss [\U\d] *[\L\d])
+	[\U] *[\L\d] *(ss [\U] *[\L\d])
 
-pwords =
-	!(| awords | quantifier) +[\L] *(ss !(| awords | quantifier) +[\L])
+words =
+	!(| adjective | quantifier) +[\L] *(ss !(| adjective | quantifier) +[\L])
 
-awords =
+adjective =
 	+[\L] '-' *(ss +[\L])
 
 quantifier =
@@ -78,60 +81,83 @@ quantifier =
 // Instance rules
 //
 
-instance = name s '(' s keyed_literal s *(',' s keyed_literal s) ')'
+instance = 
+	name s ':' s '{' s keyed_datum_list s '}'
+	
+keyed_datum_list = 	
+	keyed_datum *(s sep keyed_datum)
 
-keyed_literal =
-	key s ':' s literal
+keyed_datum =
+	key s ':' s datum
 
 key =
-	[\L] *[\L\d] *([_] +[\L\d])
+	[\L] *[\L\d] *([_] [\L] *[\L\d])
 
-//
-// Fact rules
-//
+// //
+// // Fact rules
+// //
 
-fact = 
-	*(pwords ss roled_datum ss) pwords ss roled_datum ?(ss pwords)
+// fact = 
+// 	*(words ss roled_datum ss) words ss roled_datum ?(ss words)
 
-roled_datum =
-	?(name ss) datum
+// roled_datum =
+// 	?(name ss) datum
 
 //
 // Query rules
 //
 
 query =
-	'For' ss query_body
-	
-query_body =	
-	'each' ss path path_cond grouping group_cond selector
+	?with_generators 'for' ss 'each' ss path path_control s '=>' s selector
 
 path =
-	role_variable *(step)
+	roled_variable *(step)
 
-role_variable =
+roled_variable =
 	?(name ss) variable
 
+variable =
+	+[\U]
+
 step =
-	pwords ss role_expr ?(ss pwords)
+	words ss roled_expression ?(ss words)
 
-role_expr =
-	?(name ss) expr
+roled_expression =
+	?(name ss) expression
 
-path_cond =
-	'where' boolean_expr
+path_control = 
+	?(ss where_condition) ?(ss grouping)
+
+where_condition =
+	'where' s boolean_expression
 
 grouping =
-	'group' s 'by' s name s *(',' s name)
+	group_by ss ?group_condition
 
-group_cond =
-	'having' boolean_expr
+group_by =
+	'group' ss 'by' ss name *(s sep name)
+
+group_condition =
+	'having' s boolean_expression
 
 selector =
-	'select' s '{' keyed_expr s *(',' s keyed_expr s) '}'
+	'{' keyed_expression s *(sep keyed_expression s) '}'
 
-keyed_expr =
-	key s ':' s expr
+keyed_expression =
+	key s ':' s expression
+
+//
+// Generator rules
+//
+
+with_generators = 
+	'with' ss generator_list
+
+generator_list =
+	generator +(s sep generator)
+
+generator =
+	name s ':' s '(' s query s ')'
 
 //
 // Data type rules
@@ -139,46 +165,76 @@ keyed_expr =
 
 data_type =
 	| value_type
-	| 'a' ss 'map' ss 'containing' s element_list
+	| 'a' ss 'struct' ss 'containing' s element_list
 	| 'an' ss 'array' ss 'of' ss data_type
 
 element_list =
-	'{' s role s *( ',' s role s) '}'
+	'{' s role s *( sep role s) '}'
 
 value_type =
+	builtin_value_type
+
+builtin_value_type =
+	| 'number'
+	| 'string'
+	| 'boolean'
 
 //
 // Expression rules
 //
 
-expr =
+expression =
+	| datum
+	| numeric_expression
+	| string_expression
+	| boolean_expression
 
-boolean_expr =
+numeric_expression =
+	numeric_term *((| '+' | '-') numeric_term)
 
-term =
-	| datum:term
-	| variable_expr:term
-	| function_call:term
-	-> term
+numeric_term =
+	numeric_factor *((| '*' | '/') numeric_factor)
 
-variable =
-	+[\U]
+numeric_factor =
+	| number
+	| reference
+	| '(' numeric_expression ')'
 
-variable_expr =
-	variable *('.' key)
+reference =
+	variable +('.' key)
 
-function_call =
-	name '(' s ?(term *(s sep s term) ) ')' s
-	-> name, term
+string_expression =
+	string_term *( '+' string_term)
 
-sep =	',' s
+string_term =
+	| string_literal
+	| reference
+	| '(' string_expression ')'
+
+boolean_expression =
+	and_expression *( 'or' ss and_expression)
+
+and_expression =
+	not_expression *( 'and' ss not_expression)
+
+not_expression =
+	?'not' boolean_factor
+
+boolean_factor =
+	| boolean_literal
+	| comparison
+	| reference
+	| '(' boolean_expression ')'
+
+comparison =
+	expression s comparison_operator expression
+	-> comparison_operator, expression
 
 comparison_operator =
 	| equalTo:op
 	| notEqualTo:op
 	| lessOrEqual:op
 	| lessThan:op
-	| lessOrGreater:op
 	| greaterOrEqual:op
 	| greaterThan:op
 	-> op
@@ -194,30 +250,36 @@ lessThan =
 	'<' !'='
 
 lessOrEqual =
-	| '<='
+	'<='
 
 greaterOrEqual =
-	| '>='
+	'>='
 
 greaterThan =
 	'>' ![=<]
+
+// function_call =
+// 	name '(' s ?(term *(s sep s term) ) ')' s
+// 	-> name, term
 
 //
 // Datum rules
 //
 
 datum =
-	| value
-	| container
-	| array
+	| value:d
+	| struct:d
+	| array:d
+	-> d
 
 value = (
-		| boolean_literal
-		| string
-		| number
+		| boolean_literal:v
+		| string_literal:v
+		| number:v
 	) s
+	-> v
 
-container =
+struct =
 	'{' *(|(key:k ':' datum:v *(',' key:k ':' datum:v)) | s) '}'
 	-> k, v
 
@@ -226,11 +288,13 @@ array =
 	-> e
 
 boolean_literal =
-	| 'true' !\w s
-	| 'false' !\w s
+	| 'true':v !\w s
+	| 'false':v !\w s
+	-> v
 
-string =
-	'\'' *(string_char) '\''
+string_literal =
+	'\'' *(string_char:c) '\''
+ 	-> c
 
 string_char =
 	| '\\' [befntr\\']
@@ -242,10 +306,11 @@ string_char =
 	| !['\x01-\x07\x0A-\x1F] .	// Exclude control characters except tab. Cannot exclude NUL here
 
 number = (
+		| natural_number
 		| real:number
 		| fractional_real:number
-		| hexnumber:number
-		| octalnumber:number
+		| hex_number:number
+		| octal_number:number
 	) !\w
 	-> number
 
@@ -261,16 +326,14 @@ fraction =
 exponent =
 	[Ee] ?[-+] +[0-9]
 
-naturalNumber =
+natural_number =
 	[1-9] *[0-9]
 
-hexnumber =
+hex_number =
 	'0x' +[0-9A-Fa-f]
 
-octalnumber =
+octal_number =
 	'0' *[0-7]
-
-
 
 //
 //  Whitespace rules
@@ -291,3 +354,5 @@ ws =	*(			// Optional space
 s = *ws		  // Optional space
 
 ss = +ws	  // Mandatory space
+
+sep =	sep
