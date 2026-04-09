@@ -23,14 +23,19 @@ statement =
 //
 
 concept =
-	'Each' ss name ss 'is' ss (
-		| 'a' ss 'concept'
-		| (| concept_supertype | object_type_concept) ?(ss concept_property_list)
-		| data_type_concept
-	)
+	'Each' ss name ss 'is' ss concept_definition ?(ss concept_property_list)
+	
+concept_definition =
+	| 'a' ss 'concept'
+	| concept_supertype ?(ss concept_type)
+	| concept_type
 
 concept_supertype =
 	'a' ss 'kind' ss 'of' ss name
+
+concept_type =
+	| object_type_concept 
+	| data_type_concept
 
 object_type_concept =
 	| 'identified' ss 'by' ss role_list 
@@ -40,7 +45,7 @@ data_type_concept =
 	'written' ss 'as' data_type
 
 role_list =
-	'(' s role +(sep role) s ')'
+	role +(sep role)
 
 concept_property_list =
 	'and' ss 'it' ss property +(sep property)
@@ -53,10 +58,10 @@ fact_type =
 	reading +(s '/' s reading)
 
 reading =
-	*(reading_words ss role ss) reading_words ss ?(quantifier ss) role ?(ss reading_words)
+	*(predicator ss role ss) predicator ss ?(quantifier ss) role ?(ss predicator)
 
 property =
-	reading_words ss ?(quantifier ss) role ?(ss reading_words)
+	predicator ss ?(quantifier ss) role ?(ss predicator)
 	
 role =
 	| name ss ?('(' s name s ')')
@@ -65,7 +70,7 @@ role =
 name = 
 	[\U] *[\L\d] *(ss [\U] *[\L\d])
 
-reading_words =
+predicator =
 	!reserved_words +[\L] *(ss !reserved_words +[\L])
 
 reserved_words =
@@ -102,7 +107,7 @@ key =
 // //
 
 // fact = 
-// 	*(reading_words ss roled_datum ss) reading_words ss roled_datum ?(ss reading_words)
+// 	*(predicator ss roled_datum ss) predicator ss roled_datum ?(ss predicator)
 
 // roled_datum =
 // 	?(name ss) datum
@@ -115,16 +120,24 @@ query =
 	?with_generators 'for' ss 'each' ss path path_control s '=>' s selector
 
 path =
-	roled_variable *(step)
+	object_reference variable step_body *( sep step )
 
-roled_variable =
-	?(name ss) variable
+step =
+	?( subject ss ) step_body
+	
+step_body = 
+	predicator ss roled_expression ?(ss predicator)
+
+object_reference =
+	name ?selector
+
+subject =
+	| 'that'
+	| 'who'
+	| ?object_reference variable
 
 variable =
 	+[\U]
-
-step =
-	reading_words ss roled_expression ?(ss reading_words)
 
 roled_expression =
 	?(name ss) expression
@@ -145,10 +158,17 @@ group_condition =
 	'having' ss boolean_expression
 
 selector =
+	| keyed_expression_list
+	| fact_template
+
+keyed_expression_list =
 	'{' s keyed_expression *(sep keyed_expression) s '}'
 
 keyed_expression =
 	key ':' ss expression
+
+fact_template =
+	'(' s  *(predicator ss roled_expression ss) predicator ss roled_expression ?(ss predicator) s ')'
 
 //
 // Generator rules
@@ -188,7 +208,7 @@ builtin_value_type =
 //
 
 expression =
-	| datum
+	| object_reference
 	| numeric_expression
 	| string_expression
 	| boolean_expression
@@ -209,10 +229,10 @@ multiplication_op =
 
 numeric_factor =
 	| number
-	| ?[-+] reference
+	| ?[-+] accessor_expression
 	| '(' s numeric_expression s ')'
 
-reference =
+accessor_expression =
 	variable *(| '.' key | '[' s numeric_expression s ']')
 
 string_expression =
@@ -220,7 +240,7 @@ string_expression =
 
 string_term =
 	| string_literal
-	| reference
+	| accessor_expression
 	| '(' s string_expression s ')'
 
 boolean_expression =
@@ -235,7 +255,7 @@ not_expression =
 boolean_factor =
 	| boolean_literal
 	| comparison
-	| ?('not' ss) reference
+	| ?('not' ss) accessor_expression
 	| '(' s boolean_expression s ')'
 
 comparison =
