@@ -23,9 +23,9 @@ statement =
 //
 
 concept =
-	'Each' ss name ss 'is' ss concept_definition ?(ss concept_property_list)
+	'Each' ss name ss 'is' ss concept_declaration ?(ss concept_property_list)
 	
-concept_definition =
+concept_declaration =
 	| 'a' ss 'concept'
 	| concept_supertype ?(ss concept_type)
 	| concept_type
@@ -48,7 +48,11 @@ role_list =
 	role +(sep role)
 
 concept_property_list =
-	'and' ss 'it' ss property +(sep property)
+	'and' ss pronoun ss property +(sep property)
+
+pronoun =
+	| 'it'
+	| 'they'
 
 //
 // Fact type rules
@@ -58,10 +62,14 @@ fact_type =
 	reading +(s '/' s reading)
 
 reading =
-	*(predicator ss role ss) predicator ss ?(quantifier ss) role ?(ss predicator)
+	| role ss predicator
+	| ?(preamble ss) +(role ss predicator) ss quantified_role ?(ss postamble)
 
 property =
-	predicator ss ?(quantifier ss) role ?(ss predicator)
+	predicator ss quantified_role ?(ss postamble)
+
+quantified_role =
+	?(quantifier ss) role
 	
 role =
 	| name ss ?('(' s name s ')')
@@ -70,7 +78,16 @@ role =
 name = 
 	[\U] *[\L\d] *(ss [\U] *[\L\d])
 
+preamble =
+	predicate_words
+
 predicator =
+	predicate_words
+	
+postamble =
+	predicate_words
+	
+predicate_words =
 	!reserved_words +[\L] *(ss !reserved_words +[\L])
 
 reserved_words =
@@ -91,26 +108,42 @@ quantifier =
 //
 
 instance = 
-	name ':' ss '{' s keyed_datum_list s '}'
-	
+	name ':' ss instance_body
+
+instance_body =
+	| datum
+	| '(' s instance_literal s ')'
+
+instance_literal =
+	name object_reference ?(property_literal *(sep property_literal))
+
+property_literal =
+	predicator ss role_literal ?(ss postamble)
+
+//
+// Fact rules
+//
+
+fact = 
+	| role_literal ss predicator
+ 	| ?(preamble ss) +(role_literal ss predicator) ss role_literal ?(ss postamble)
+
+role_literal =
+ 	| ?(name ss) datum
+	| name object_reference
+
+object_reference =
+	| keyed_datum_list
+	| '(' s fact s ')'
+
 keyed_datum_list = 	
-	keyed_datum *(sep keyed_datum)
+	'{' s keyed_datum *(sep keyed_datum) s '}'
 
 keyed_datum =
 	key ':' ss datum
 
 key =
 	[\L] *[\L\d] *([_] [\L] *[\L\d])
-
-// //
-// // Fact rules
-// //
-
-// fact = 
-// 	*(predicator ss roled_datum ss) predicator ss roled_datum ?(ss predicator)
-
-// roled_datum =
-// 	?(name ss) datum
 
 //
 // Query rules
@@ -120,21 +153,28 @@ query =
 	?with_generators 'for' ss 'each' ss path path_control s '=>' s selector
 
 path =
-	object_reference variable step_body *( sep step )
+	object_template variable step_body *( sep step )
 
 step =
 	?( subject ss ) step_body
 	
 step_body = 
-	predicator ss roled_expression ?(ss predicator)
+	predicator ss roled_expression ?(ss postamble)
 
-object_reference =
-	name ?selector
+object_template =
+	name ?object_selector
+
+object_selector =
+	| keyed_expression_list
+	| '(' s fact_template s ')'	
 
 subject =
+	| relative_pronoun
+	| ?object_template variable
+
+relative_pronoun =
 	| 'that'
 	| 'who'
-	| ?object_reference variable
 
 variable =
 	+[\U]
@@ -159,7 +199,7 @@ group_condition =
 
 selector =
 	| keyed_expression_list
-	| fact_template
+	| '(' s instance_template s ')'
 
 keyed_expression_list =
 	'{' s keyed_expression *(sep keyed_expression) s '}'
@@ -167,21 +207,27 @@ keyed_expression_list =
 keyed_expression =
 	key ':' ss expression
 
+instance_template =
+	object_template ?(property_template *(sep property_template))
+
+property_template =
+	predicator ss roled_expression ?(ss predicator)
+
 fact_template =
-	'(' s  *(predicator ss roled_expression ss) predicator ss roled_expression ?(ss predicator) s ')'
+	?( preamble ss ) +(roled_expression ss predicator) ss roled_expression ?(ss postamble)
 
 //
 // Generator rules
 //
+
+generator =
+	name ':' ss '(' s query s ')'
 
 with_generators = 
 	'with' ss generator_list
 
 generator_list =
 	generator +(sep generator)
-
-generator =
-	name ':' ss '(' s query s ')'
 
 //
 // Data type rules
@@ -208,22 +254,22 @@ builtin_value_type =
 //
 
 expression =
-	| object_reference
+	| object_template
 	| numeric_expression
 	| string_expression
 	| boolean_expression
 
 numeric_expression =
-	numeric_term *(s addition_op s numeric_term)
+	numeric_term *(s addition_operator s numeric_term)
 
-addition_op =
+addition_operator =
 	| '+' 
 	| '-'
 
 numeric_term =
-	numeric_factor *(s multiplication_op s numeric_factor)
+	numeric_factor *(s multiplication_operator s numeric_factor)
 
-multiplication_op =
+multiplication_operator =
 	| '*' 
 	| '/'
 
@@ -255,7 +301,7 @@ not_expression =
 boolean_factor =
 	| boolean_literal
 	| comparison
-	| ?('not' ss) accessor_expression
+	| accessor_expression
 	| '(' s boolean_expression s ')'
 
 comparison =
@@ -263,31 +309,31 @@ comparison =
 	-> comparison_operator, expression
 
 comparison_operator =
-	| equal_to_op:op
-	| not_equal_to_op:op
-	| less_or_equal_op:op
-	| less_than_op:op
-	| greater_or_equal_op:op
-	| greater_than_op:op
+	| equal_to_operator:op
+	| not_equal_to_operator:op
+	| less_or_equal_operator:op
+	| less_than_operator:op
+	| greater_or_equal_operator:op
+	| greater_than_operator:op
 	-> op
 
-equal_to_op =
+equal_to_operator =
 	'=' ![>]
 
-not_equal_to_op =
+not_equal_to_operator =
 	| '<>'
 	| '!='
 
-less_than_op =
+less_than_operator =
 	'<' !'='
 
-less_or_equal_op =
+less_or_equal_operator =
 	'<='
 
-greater_or_equal_op =
+greater_or_equal_operator =
 	'>='
 
-greater_than_op =
+greater_than_operator =
 	'>' ![=<]
 
 // function_call =
@@ -304,11 +350,10 @@ datum =
 	| array:d
 	-> d
 
-value = (
-		| boolean_literal:v
-		| string_literal:v
-		| number:v
-	)
+value =
+	| boolean_literal:v
+	| string_literal:v
+	| number:v
 	-> v
 
 struct =
@@ -338,7 +383,7 @@ string_char =
 	| !['\x01-\x07\x0A-\x1F] .	// Exclude control characters except tab. Cannot exclude NUL here
 
 number = (
-		| integer
+		| integer:number
 		| real:number
 		| fractional_real:number
 		| hex_number:number
@@ -368,8 +413,10 @@ octal_number =
 	'0' *[0-7]
 
 //
-//  Whitespace rules
+//  Separator and whitespace rules
 //
+
+sep =	',' s
 
 comment_to_eol =
   '//' *(!'\n' .)
@@ -386,5 +433,3 @@ ws =	*(			// Optional space
 s = *ws		  // Optional space
 
 ss = +ws	  // Mandatory space
-
-sep =	',' s
