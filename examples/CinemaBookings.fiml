@@ -1,0 +1,63 @@
+/*
+ * Value Types
+ */
+Each Cinema Id is written as Number.
+Each DateTime Value is written as Date Time.
+Each Film Id is written as Number.
+Each Name is written as String.
+Each Seat Count is written as Number /* unsupported: Unsigned Integer(16) restricted to {1..} */.
+Each Person Id is written as Number.
+Each Row Nr is written as String /* unsupported: Char(2) */.
+Each Seat Number is written as Number /* unsupported: Unsigned Integer(16) */.
+Each Section Name is written as String.
+
+/*
+ * Entity Types
+ */
+Each Cinema is identified by Cinema Id.
+
+/* unsupported: Each DateTime is identified by its Value. */
+
+Each Film is identified by Film Id and it
+  has at most one Name.
+
+Each Person is identified by Person Id and it
+  has one login- Name / Name is of at most one Person.
+
+Each Row is identified by Cinema, Row Nr and it
+	is in one Cinema / Cinema contains Row,
+	has one Row Nr / Row Nr is of Row.
+
+Each Seat is identified by Row, Seat Number and it
+	is in one Row / Row contains many Seats,
+	has one Seat Number / Seat Number is of many Seats.
+
+Each Section is identified by Section Name and it
+	contains many Seats / Seat is in at most one Section.
+
+Each Session is where
+	Cinema shows Film on many Date Times /
+	Film is showing on Date Time at many Cinemas /
+	Cinema at Date Time is showing one Film.
+
+Each Booking is where
+	Person booked Session for one Seat Count of seats /
+	Person booked Seat Count of seats for Session
+and it
+  has Status.
+
+Each Seat Allocation is where
+	Booking has allocated-Seat/
+	Seat is allocated to Booking.
+
+/*
+ * Constraints:
+ */
+// Booking (in which Person booked Session (in which Cinema shows Film on Date Time) for Seat Count of seats) has allocated Seat
+// 	only if Cinema contains Row that contains Seat.
+
+// As query: Find bookings where 
+
+For each Booking (Person P booked Session S for Seat Count SC of seats) B has allocated Seat ST
+  where not (B.session.cinema contains Row R, that contains ST)
+  => B.

@@ -4,7 +4,7 @@
 
 TOP	=
 	?(BOM:bom)
-	*statement
+	*(?s statement)
 	-> bom, statement
 
 BOM	=
@@ -16,7 +16,10 @@ statement =
 		| instance
 		| query
 		| generator
-	) s '.'
+	) s '.' white_to_eol (| '\n' | EOF)
+
+EOF =					// End of file is where nothing follows
+	!.
 
 //
 // Concept rules
@@ -34,21 +37,30 @@ concept_supertype =
 	'a' ss 'kind' ss 'of' ss name
 
 concept_type =
-	| object_type_concept 
-	| data_type_concept
+	| object_type_declaration 
+	| data_type_declaration
 
-object_type_concept =
-	| 'identified' ss 'by' ss role_list 
-	| 'where' ss fact_type
+object_type_declaration =
+	| entity_type_declaration
+	| fact_type_declaration
 
-data_type_concept =
-	'written' ss 'as' data_type
+entity_type_declaration =
+	'identified' ss 'by' ss identifier_list
 
-role_list =
-	role +(sep role)
+fact_type_declaration = 
+	'where' ss fact_type
+
+data_type_declaration =
+	'written' ss 'as' ss data_type
+
+identifier_list =
+	identifier *(sep identifier)
+
+identifier =
+	item
 
 concept_property_list =
-	'and' ss pronoun ss property +(sep property)
+	'and' ss pronoun ss property *(sep property)
 
 pronoun =
 	| 'it'
@@ -62,21 +74,27 @@ fact_type =
 	reading +(s '/' s reading)
 
 reading =
+	| ?(preamble ss) +(role ss predicator ss) quantified_role ?(ss postamble)
 	| role ss predicator
-	| ?(preamble ss) +(role ss predicator) ss quantified_role ?(ss postamble)
 
 property =
+	property_reading ?(s '/' s role ss property_reading)
+
+property_reading =
 	predicator ss quantified_role ?(ss postamble)
 
 quantified_role =
 	?(quantifier ss) role
-	
+
 role =
-	| name ss ?('(' s name s ')')
+	item
+
+item =
+	| name ?(ss '(' s name s ')')
 	| adjective ss name
 
 name = 
-	[\U] *[\L\d] *(ss [\U] *[\L\d])
+	[\U] +[\L\d] *(ss [\U] +[\L\d])
 
 preamble =
 	predicate_words
@@ -126,11 +144,11 @@ property_literal =
 
 fact = 
 	| role_literal ss predicator
- 	| ?(preamble ss) +(role_literal ss predicator) ss role_literal ?(ss postamble)
+ 	| ?(preamble ss) +(role_literal ss predicator ss) role_literal ?(ss postamble)
 
 role_literal =
  	| ?(name ss) datum
-	| name object_reference
+	| name ss object_reference
 
 object_reference =
 	| keyed_datum_list
@@ -150,10 +168,10 @@ key =
 //
 
 query =
-	?with_generators 'for' ss 'each' ss path path_control s '=>' s selector
+	?(with_generators ss) [Ff] 'or' ss 'each' ss path path_control s '=>' s selector
 
 path =
-	object_template variable step_body *( sep step )
+	object_template ss variable ss step_body *( sep step )
 
 step =
 	?( subject ss ) step_body
@@ -162,7 +180,7 @@ step_body =
 	predicator ss roled_expression ?(ss postamble)
 
 object_template =
-	name ?object_selector
+	name ?(ss object_selector)
 
 object_selector =
 	| keyed_expression_list
@@ -170,7 +188,7 @@ object_selector =
 
 subject =
 	| relative_pronoun
-	| ?object_template variable
+	| ?object_template ss variable
 
 relative_pronoun =
 	| 'that'
@@ -180,7 +198,8 @@ variable =
 	+[\U]
 
 roled_expression =
-	?(name ss) expression
+	| object_template
+	| ?(name ss) expression
 
 path_control = 
 	?(ss where_condition) ?(ss grouping)
@@ -208,13 +227,22 @@ keyed_expression =
 	key ':' ss expression
 
 instance_template =
-	object_template ?(property_template *(sep property_template))
+	object_template ?(ss property_template *(sep property_template))
 
 property_template =
 	predicator ss roled_expression ?(ss predicator)
 
 fact_template =
-	?( preamble ss ) +(roled_expression ss predicator) ss roled_expression ?(ss postamble)
+	?( preamble ss ) +(roled_expression ss predicator ss) roled_expression ?(ss postamble)
+
+// fact_template =
+//	?( preamble ss ) +fact_template_loop roled_expression ?(ss postamble)
+	
+fact_template_loop = 
+	&(fact_template_step ss roled_expression) fact_template_step ss
+
+fact_template_step =	
+	roled_expression ss predicator
 
 //
 // Generator rules
@@ -224,7 +252,7 @@ generator =
 	name ':' ss '(' s query s ')'
 
 with_generators = 
-	'with' ss generator_list
+	[Ww] 'ith' ss generator_list
 
 generator_list =
 	generator +(sep generator)
@@ -239,25 +267,32 @@ data_type =
 	| 'an' ss 'array' ss 'of' ss data_type
 
 element_list =
-	'{' s role *( sep role) s '}'
+	'{' s element *( sep element) s '}'
+
+element =
+	item
 
 value_type =
 	builtin_value_type
 
 builtin_value_type =
-	| 'number'
-	| 'string'
-	| 'boolean'
+	| 'Number'
+	| 'String'
+	| 'Boolean'
+	| 'Date Time'
 
 //
 // Expression rules
 //
 
 expression =
-	| object_template
+	| accessor_expression
 	| numeric_expression
 	| string_expression
 	| boolean_expression
+
+accessor_expression =
+	variable *(| '.' key | '[' s numeric_expression s ']')
 
 numeric_expression =
 	numeric_term *(s addition_operator s numeric_term)
@@ -275,11 +310,8 @@ multiplication_operator =
 
 numeric_factor =
 	| number
-	| ?[-+] accessor_expression
+	| ?'-' accessor_expression
 	| '(' s numeric_expression s ')'
-
-accessor_expression =
-	variable *(| '.' key | '[' s numeric_expression s ']')
 
 string_expression =
 	string_term *( s '+' s string_term)
@@ -302,6 +334,7 @@ boolean_factor =
 	| boolean_literal
 	| comparison
 	| accessor_expression
+	| 'exists' ss '(' s query s ')'
 	| '(' s boolean_expression s ')'
 
 comparison =
@@ -430,6 +463,12 @@ ws =	*(			// Optional space
 	  | comment_c_style
 	)
 
+white_to_eol = 	*(			// ws except for \n
+	  | +[ \t\r]		      // one or more inline spaces
+	  | comment_to_eol
+	  | comment_c_style
+	)
+	
 s = *ws		  // Optional space
 
 ss = +ws	  // Mandatory space

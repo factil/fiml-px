@@ -1,0 +1,17 @@
+Each Concept is identified by Name (String) and it 
+  has at most one supertype- Concept,
+  has many Properties.
+
+Each Object Type is a kind of Concept and it
+  is identified by Identifier List.
+
+Each Entity Type is a kind of Object Type.
+
+Each Named Fact Type is a kind of Object Type and it
+  encapsulates one Fact Type.
+
+Each Data Type is a kind of Concept.
+
+Each Identifier is identified by Object Type and Ordinal at it
+  belongs to one Object Type / Object Type has many Identifiers,
+  is in one Ordinal position / Ordinal identifier for object type is Identifier. 

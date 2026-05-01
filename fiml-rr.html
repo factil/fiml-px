@@ -2,7 +2,7 @@
 <head>
 <meta charset='UTF-8'>
 <title>Fiml Grammar</title>
-<link rel='stylesheet' href='../px/scripts/railroad-diagrams.css'>
+<link rel='stylesheet' href='scripts/railroad-diagrams.css'>
 <link rel='stylesheet' href='local.css' media='screen' type='text/css' />
 <style>
 body svg.railroad-diagram {
@@ -32,15 +32,17 @@ dd {
 	padding-bottom: 10px;
 }
 </style>
-<script src='../px/scripts/railroad-diagrams.js'></script>
+<script src='scripts/railroad-diagrams.js'></script>
 <script>
 var FimlRailroads = {
   TOP:
-    ComplexDiagram(Sequence(Optional(NonTerminal('BOM', {href: '#BOM'})), ZeroOrMore(NonTerminal('statement', {href: '#statement'})))),
+    ComplexDiagram(Sequence(Optional(NonTerminal('BOM', {href: '#BOM'})), ZeroOrMore(Sequence(Optional(NonTerminal('s', {href: '#s'})), NonTerminal('statement', {href: '#statement'}))))),
   BOM:
     ComplexDiagram(Terminal('\\u{FEFF}')),
   statement:
-    ComplexDiagram(Sequence(Choice(0, NonTerminal('concept', {href: '#concept'}), NonTerminal('instance', {href: '#instance'}), NonTerminal('query', {href: '#query'}), NonTerminal('generator', {href: '#generator'})), NonTerminal('s', {href: '#s'}), Terminal('.'))),
+    ComplexDiagram(Sequence(Choice(0, NonTerminal('concept', {href: '#concept'}), NonTerminal('instance', {href: '#instance'}), NonTerminal('query', {href: '#query'}), NonTerminal('generator', {href: '#generator'})), NonTerminal('s', {href: '#s'}), Terminal('.'), NonTerminal('white_to_eol', {href: '#white_to_eol'}), Choice(0, Terminal('\\n'), NonTerminal('EOF', {href: '#EOF'})))),
+  EOF:
+    ComplexDiagram(Terminal('!any char')),
   concept:
     ComplexDiagram(Sequence(Terminal('Each'), NonTerminal('ss', {href: '#ss'}), NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}), Terminal('is'), NonTerminal('ss', {href: '#ss'}), NonTerminal('concept_declaration', {href: '#concept_declaration'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('concept_property_list', {href: '#concept_property_list'}))))),
   concept_declaration:
@@ -48,29 +50,39 @@ var FimlRailroads = {
   concept_supertype:
     ComplexDiagram(Sequence(Terminal('a'), NonTerminal('ss', {href: '#ss'}), Terminal('kind'), NonTerminal('ss', {href: '#ss'}), Terminal('of'), NonTerminal('ss', {href: '#ss'}), NonTerminal('name', {href: '#name'}))),
   concept_type:
-    ComplexDiagram(Choice(0, NonTerminal('object_type_concept', {href: '#object_type_concept'}), NonTerminal('data_type_concept', {href: '#data_type_concept'}))),
-  object_type_concept:
-    ComplexDiagram(Choice(0, Sequence(Terminal('identified'), NonTerminal('ss', {href: '#ss'}), Terminal('by'), NonTerminal('ss', {href: '#ss'}), NonTerminal('role_list', {href: '#role_list'})), Sequence(Terminal('where'), NonTerminal('ss', {href: '#ss'}), NonTerminal('fact_type', {href: '#fact_type'})))),
-  data_type_concept:
-    ComplexDiagram(Sequence(Terminal('written'), NonTerminal('ss', {href: '#ss'}), Terminal('as'), NonTerminal('data_type', {href: '#data_type'}))),
-  role_list:
-    ComplexDiagram(Sequence(NonTerminal('role', {href: '#role'}), OneOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('role', {href: '#role'}))))),
+    ComplexDiagram(Choice(0, NonTerminal('object_type_declaration', {href: '#object_type_declaration'}), NonTerminal('data_type_declaration', {href: '#data_type_declaration'}))),
+  object_type_declaration:
+    ComplexDiagram(Choice(0, NonTerminal('entity_type_declaration', {href: '#entity_type_declaration'}), NonTerminal('fact_type_declaration', {href: '#fact_type_declaration'}))),
+  entity_type_declaration:
+    ComplexDiagram(Sequence(Terminal('identified'), NonTerminal('ss', {href: '#ss'}), Terminal('by'), NonTerminal('ss', {href: '#ss'}), NonTerminal('identifier_list', {href: '#identifier_list'}))),
+  fact_type_declaration:
+    ComplexDiagram(Sequence(Terminal('where'), NonTerminal('ss', {href: '#ss'}), NonTerminal('fact_type', {href: '#fact_type'}))),
+  data_type_declaration:
+    ComplexDiagram(Sequence(Terminal('written'), NonTerminal('ss', {href: '#ss'}), Terminal('as'), NonTerminal('ss', {href: '#ss'}), NonTerminal('data_type', {href: '#data_type'}))),
+  identifier_list:
+    ComplexDiagram(Sequence(NonTerminal('identifier', {href: '#identifier'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('identifier', {href: '#identifier'}))))),
+  identifier:
+    ComplexDiagram(NonTerminal('item', {href: '#item'})),
   concept_property_list:
-    ComplexDiagram(Sequence(Terminal('and'), NonTerminal('ss', {href: '#ss'}), NonTerminal('pronoun', {href: '#pronoun'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('property', {href: '#property'}), OneOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('property', {href: '#property'}))))),
+    ComplexDiagram(Sequence(Terminal('and'), NonTerminal('ss', {href: '#ss'}), NonTerminal('pronoun', {href: '#pronoun'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('property', {href: '#property'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('property', {href: '#property'}))))),
   pronoun:
     ComplexDiagram(Choice(0, Terminal('it'), Terminal('they'))),
   fact_type:
     ComplexDiagram(Sequence(NonTerminal('reading', {href: '#reading'}), OneOrMore(Sequence(NonTerminal('s', {href: '#s'}), Terminal('/'), NonTerminal('s', {href: '#s'}), NonTerminal('reading', {href: '#reading'}))))),
   reading:
-    ComplexDiagram(Choice(0, Sequence(NonTerminal('role', {href: '#role'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'})), Sequence(Optional(Sequence(NonTerminal('preamble', {href: '#preamble'}), NonTerminal('ss', {href: '#ss'}))), OneOrMore(Sequence(NonTerminal('role', {href: '#role'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}))), NonTerminal('ss', {href: '#ss'}), NonTerminal('quantified_role', {href: '#quantified_role'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'})))))),
+    ComplexDiagram(Choice(0, Sequence(Optional(Sequence(NonTerminal('preamble', {href: '#preamble'}), NonTerminal('ss', {href: '#ss'}))), OneOrMore(Sequence(NonTerminal('role', {href: '#role'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('quantified_role', {href: '#quantified_role'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'})))), Sequence(NonTerminal('role', {href: '#role'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'})))),
   property:
+    ComplexDiagram(Sequence(NonTerminal('property_reading', {href: '#property_reading'}), Optional(Sequence(NonTerminal('s', {href: '#s'}), Terminal('/'), NonTerminal('s', {href: '#s'}), NonTerminal('role', {href: '#role'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('property_reading', {href: '#property_reading'}))))),
+  property_reading:
     ComplexDiagram(Sequence(NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('quantified_role', {href: '#quantified_role'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'}))))),
   quantified_role:
     ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('quantifier', {href: '#quantifier'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('role', {href: '#role'}))),
   role:
-    ComplexDiagram(Choice(0, Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}), Optional(Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('name', {href: '#name'}), NonTerminal('s', {href: '#s'}), Terminal(')')))), Sequence(NonTerminal('adjective', {href: '#adjective'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('name', {href: '#name'})))),
+    ComplexDiagram(NonTerminal('item', {href: '#item'})),
+  item:
+    ComplexDiagram(Choice(0, Sequence(NonTerminal('name', {href: '#name'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('name', {href: '#name'}), NonTerminal('s', {href: '#s'}), Terminal(')')))), Sequence(NonTerminal('adjective', {href: '#adjective'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('name', {href: '#name'})))),
   name:
-    ComplexDiagram(Sequence(Terminal('[\\U]'), ZeroOrMore(Terminal('[\\L\\d]')), ZeroOrMore(Sequence(NonTerminal('ss', {href: '#ss'}), Terminal('[\\U]'), ZeroOrMore(Terminal('[\\L\\d]')))))),
+    ComplexDiagram(Sequence(Terminal('[\\U]'), OneOrMore(Terminal('[\\L\\d]')), ZeroOrMore(Sequence(NonTerminal('ss', {href: '#ss'}), Terminal('[\\U]'), OneOrMore(Terminal('[\\L\\d]')))))),
   preamble:
     ComplexDiagram(NonTerminal('predicate_words', {href: '#predicate_words'})),
   predicator:
@@ -94,9 +106,9 @@ var FimlRailroads = {
   property_literal:
     ComplexDiagram(Sequence(NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('role_literal', {href: '#role_literal'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'}))))),
   fact:
-    ComplexDiagram(Choice(0, Sequence(NonTerminal('role_literal', {href: '#role_literal'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'})), Sequence(Optional(Sequence(NonTerminal('preamble', {href: '#preamble'}), NonTerminal('ss', {href: '#ss'}))), OneOrMore(Sequence(NonTerminal('role_literal', {href: '#role_literal'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}))), NonTerminal('ss', {href: '#ss'}), NonTerminal('role_literal', {href: '#role_literal'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'})))))),
+    ComplexDiagram(Choice(0, Sequence(NonTerminal('role_literal', {href: '#role_literal'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'})), Sequence(Optional(Sequence(NonTerminal('preamble', {href: '#preamble'}), NonTerminal('ss', {href: '#ss'}))), OneOrMore(Sequence(NonTerminal('role_literal', {href: '#role_literal'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('role_literal', {href: '#role_literal'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'})))))),
   role_literal:
-    ComplexDiagram(Choice(0, Sequence(Optional(Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('datum', {href: '#datum'})), Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('object_reference', {href: '#object_reference'})))),
+    ComplexDiagram(Choice(0, Sequence(Optional(Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('datum', {href: '#datum'})), Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('object_reference', {href: '#object_reference'})))),
   object_reference:
     ComplexDiagram(Choice(0, NonTerminal('keyed_datum_list', {href: '#keyed_datum_list'}), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('fact', {href: '#fact'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
   keyed_datum_list:
@@ -106,25 +118,25 @@ var FimlRailroads = {
   key:
     ComplexDiagram(Sequence(Terminal('[\\L]'), ZeroOrMore(Terminal('[\\L\\d]')), ZeroOrMore(Sequence(Terminal('[_]'), Terminal('[\\L]'), ZeroOrMore(Terminal('[\\L\\d]')))))),
   query:
-    ComplexDiagram(Sequence(Optional(NonTerminal('with_generators', {href: '#with_generators'})), Terminal('for'), NonTerminal('ss', {href: '#ss'}), Terminal('each'), NonTerminal('ss', {href: '#ss'}), NonTerminal('path', {href: '#path'}), NonTerminal('path_control', {href: '#path_control'}), NonTerminal('s', {href: '#s'}), Terminal('=>'), NonTerminal('s', {href: '#s'}), NonTerminal('selector', {href: '#selector'}))),
+    ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('with_generators', {href: '#with_generators'}), NonTerminal('ss', {href: '#ss'}))), Terminal('[Ff]'), Terminal('or'), NonTerminal('ss', {href: '#ss'}), Terminal('each'), NonTerminal('ss', {href: '#ss'}), NonTerminal('path', {href: '#path'}), NonTerminal('path_control', {href: '#path_control'}), NonTerminal('s', {href: '#s'}), Terminal('=>'), NonTerminal('s', {href: '#s'}), NonTerminal('selector', {href: '#selector'}))),
   path:
-    ComplexDiagram(Sequence(NonTerminal('object_template', {href: '#object_template'}), NonTerminal('variable', {href: '#variable'}), NonTerminal('step_body', {href: '#step_body'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('step', {href: '#step'}))))),
+    ComplexDiagram(Sequence(NonTerminal('object_template', {href: '#object_template'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('variable', {href: '#variable'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('step_body', {href: '#step_body'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('step', {href: '#step'}))))),
   step:
     ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('subject', {href: '#subject'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('step_body', {href: '#step_body'}))),
   step_body:
     ComplexDiagram(Sequence(NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('roled_expression', {href: '#roled_expression'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'}))))),
   object_template:
-    ComplexDiagram(Sequence(NonTerminal('name', {href: '#name'}), Optional(NonTerminal('object_selector', {href: '#object_selector'})))),
+    ComplexDiagram(Sequence(NonTerminal('name', {href: '#name'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('object_selector', {href: '#object_selector'}))))),
   object_selector:
     ComplexDiagram(Choice(0, NonTerminal('keyed_expression_list', {href: '#keyed_expression_list'}), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('fact_template', {href: '#fact_template'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
   subject:
-    ComplexDiagram(Choice(0, NonTerminal('relative_pronoun', {href: '#relative_pronoun'}), Sequence(Optional(NonTerminal('object_template', {href: '#object_template'})), NonTerminal('variable', {href: '#variable'})))),
+    ComplexDiagram(Choice(0, NonTerminal('relative_pronoun', {href: '#relative_pronoun'}), Sequence(Optional(NonTerminal('object_template', {href: '#object_template'})), NonTerminal('ss', {href: '#ss'}), NonTerminal('variable', {href: '#variable'})))),
   relative_pronoun:
     ComplexDiagram(Choice(0, Terminal('that'), Terminal('who'))),
   variable:
     ComplexDiagram(OneOrMore(Terminal('[\\U]'))),
   roled_expression:
-    ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('expression', {href: '#expression'}))),
+    ComplexDiagram(Choice(0, NonTerminal('object_template', {href: '#object_template'}), Sequence(Optional(Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('expression', {href: '#expression'})))),
   path_control:
     ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('where_condition', {href: '#where_condition'}))), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('grouping', {href: '#grouping'}))))),
   where_condition:
@@ -142,27 +154,35 @@ var FimlRailroads = {
   keyed_expression:
     ComplexDiagram(Sequence(NonTerminal('key', {href: '#key'}), Terminal(':'), NonTerminal('ss', {href: '#ss'}), NonTerminal('expression', {href: '#expression'}))),
   instance_template:
-    ComplexDiagram(Sequence(NonTerminal('object_template', {href: '#object_template'}), Optional(Sequence(NonTerminal('property_template', {href: '#property_template'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('property_template', {href: '#property_template'}))))))),
+    ComplexDiagram(Sequence(NonTerminal('object_template', {href: '#object_template'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('property_template', {href: '#property_template'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('property_template', {href: '#property_template'}))))))),
   property_template:
     ComplexDiagram(Sequence(NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('roled_expression', {href: '#roled_expression'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}))))),
   fact_template:
-    ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('preamble', {href: '#preamble'}), NonTerminal('ss', {href: '#ss'}))), OneOrMore(Sequence(NonTerminal('roled_expression', {href: '#roled_expression'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}))), NonTerminal('ss', {href: '#ss'}), NonTerminal('roled_expression', {href: '#roled_expression'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'}))))),
+    ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('preamble', {href: '#preamble'}), NonTerminal('ss', {href: '#ss'}))), OneOrMore(Sequence(NonTerminal('roled_expression', {href: '#roled_expression'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('roled_expression', {href: '#roled_expression'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'}))))),
+  fact_template_loop:
+    ComplexDiagram(Sequence(Sequence(NonTerminal('&fact_template_step', {href: '#fact_template_step'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('roled_expression', {href: '#roled_expression'})), NonTerminal('fact_template_step', {href: '#fact_template_step'}), NonTerminal('ss', {href: '#ss'}))),
+  fact_template_step:
+    ComplexDiagram(Sequence(NonTerminal('roled_expression', {href: '#roled_expression'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('predicator', {href: '#predicator'}))),
   generator:
     ComplexDiagram(Sequence(NonTerminal('name', {href: '#name'}), Terminal(':'), NonTerminal('ss', {href: '#ss'}), Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('query', {href: '#query'}), NonTerminal('s', {href: '#s'}), Terminal(')'))),
   with_generators:
-    ComplexDiagram(Sequence(Terminal('with'), NonTerminal('ss', {href: '#ss'}), NonTerminal('generator_list', {href: '#generator_list'}))),
+    ComplexDiagram(Sequence(Terminal('[Ww]'), Terminal('ith'), NonTerminal('ss', {href: '#ss'}), NonTerminal('generator_list', {href: '#generator_list'}))),
   generator_list:
     ComplexDiagram(Sequence(NonTerminal('generator', {href: '#generator'}), OneOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('generator', {href: '#generator'}))))),
   data_type:
     ComplexDiagram(Choice(0, NonTerminal('value_type', {href: '#value_type'}), Sequence(Terminal('a'), NonTerminal('ss', {href: '#ss'}), Terminal('struct'), NonTerminal('ss', {href: '#ss'}), Terminal('containing'), NonTerminal('ss', {href: '#ss'}), NonTerminal('element_list', {href: '#element_list'})), Sequence(Terminal('an'), NonTerminal('ss', {href: '#ss'}), Terminal('array'), NonTerminal('ss', {href: '#ss'}), Terminal('of'), NonTerminal('ss', {href: '#ss'}), NonTerminal('data_type', {href: '#data_type'})))),
   element_list:
-    ComplexDiagram(Sequence(Terminal('{'), NonTerminal('s', {href: '#s'}), NonTerminal('role', {href: '#role'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('role', {href: '#role'}))), NonTerminal('s', {href: '#s'}), Terminal('}'))),
+    ComplexDiagram(Sequence(Terminal('{'), NonTerminal('s', {href: '#s'}), NonTerminal('element', {href: '#element'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('element', {href: '#element'}))), NonTerminal('s', {href: '#s'}), Terminal('}'))),
+  element:
+    ComplexDiagram(NonTerminal('item', {href: '#item'})),
   value_type:
     ComplexDiagram(NonTerminal('builtin_value_type', {href: '#builtin_value_type'})),
   builtin_value_type:
-    ComplexDiagram(Choice(0, Terminal('number'), Terminal('string'), Terminal('boolean'))),
+    ComplexDiagram(Choice(0, Terminal('Number'), Terminal('String'), Terminal('Boolean'), Terminal('Date Time'))),
   expression:
-    ComplexDiagram(Choice(0, NonTerminal('object_template', {href: '#object_template'}), NonTerminal('numeric_expression', {href: '#numeric_expression'}), NonTerminal('string_expression', {href: '#string_expression'}), NonTerminal('boolean_expression', {href: '#boolean_expression'}))),
+    ComplexDiagram(Choice(0, NonTerminal('accessor_expression', {href: '#accessor_expression'}), NonTerminal('numeric_expression', {href: '#numeric_expression'}), NonTerminal('string_expression', {href: '#string_expression'}), NonTerminal('boolean_expression', {href: '#boolean_expression'}))),
+  accessor_expression:
+    ComplexDiagram(Sequence(NonTerminal('variable', {href: '#variable'}), ZeroOrMore(Choice(0, Sequence(Terminal('.'), NonTerminal('key', {href: '#key'})), Sequence(Terminal('['), NonTerminal('s', {href: '#s'}), NonTerminal('numeric_expression', {href: '#numeric_expression'}), NonTerminal('s', {href: '#s'}), Terminal(']')))))),
   numeric_expression:
     ComplexDiagram(Sequence(NonTerminal('numeric_term', {href: '#numeric_term'}), ZeroOrMore(Sequence(NonTerminal('s', {href: '#s'}), NonTerminal('addition_operator', {href: '#addition_operator'}), NonTerminal('s', {href: '#s'}), NonTerminal('numeric_term', {href: '#numeric_term'}))))),
   addition_operator:
@@ -172,9 +192,7 @@ var FimlRailroads = {
   multiplication_operator:
     ComplexDiagram(Choice(0, Terminal('*'), Terminal('/'))),
   numeric_factor:
-    ComplexDiagram(Choice(0, NonTerminal('number', {href: '#number'}), Sequence(Optional(Terminal('[-+]')), NonTerminal('accessor_expression', {href: '#accessor_expression'})), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('numeric_expression', {href: '#numeric_expression'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
-  accessor_expression:
-    ComplexDiagram(Sequence(NonTerminal('variable', {href: '#variable'}), ZeroOrMore(Choice(0, Sequence(Terminal('.'), NonTerminal('key', {href: '#key'})), Sequence(Terminal('['), NonTerminal('s', {href: '#s'}), NonTerminal('numeric_expression', {href: '#numeric_expression'}), NonTerminal('s', {href: '#s'}), Terminal(']')))))),
+    ComplexDiagram(Choice(0, NonTerminal('number', {href: '#number'}), Sequence(Optional(Terminal('-')), NonTerminal('accessor_expression', {href: '#accessor_expression'})), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('numeric_expression', {href: '#numeric_expression'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
   string_expression:
     ComplexDiagram(Sequence(NonTerminal('string_term', {href: '#string_term'}), ZeroOrMore(Sequence(NonTerminal('s', {href: '#s'}), Terminal('+'), NonTerminal('s', {href: '#s'}), NonTerminal('string_term', {href: '#string_term'}))))),
   string_term:
@@ -186,7 +204,7 @@ var FimlRailroads = {
   not_expression:
     ComplexDiagram(Sequence(Optional(Terminal('not')), NonTerminal('ss', {href: '#ss'}), NonTerminal('boolean_factor', {href: '#boolean_factor'}))),
   boolean_factor:
-    ComplexDiagram(Choice(0, NonTerminal('boolean_literal', {href: '#boolean_literal'}), NonTerminal('comparison', {href: '#comparison'}), NonTerminal('accessor_expression', {href: '#accessor_expression'}), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('boolean_expression', {href: '#boolean_expression'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
+    ComplexDiagram(Choice(0, NonTerminal('boolean_literal', {href: '#boolean_literal'}), NonTerminal('comparison', {href: '#comparison'}), NonTerminal('accessor_expression', {href: '#accessor_expression'}), Sequence(Terminal('exists'), NonTerminal('ss', {href: '#ss'}), Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('query', {href: '#query'}), NonTerminal('s', {href: '#s'}), Terminal(')')), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('boolean_expression', {href: '#boolean_expression'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
   comparison:
     ComplexDiagram(Sequence(NonTerminal('expression', {href: '#expression'}), NonTerminal('s', {href: '#s'}), NonTerminal('comparison_operator', {href: '#comparison_operator'}), NonTerminal('s', {href: '#s'}), NonTerminal('expression', {href: '#expression'}))),
   comparison_operator:
@@ -241,6 +259,8 @@ var FimlRailroads = {
     ComplexDiagram(Sequence(Terminal('/*'), ZeroOrMore(Sequence(Terminal('!*/'), Terminal('any char'))), Terminal('*/'))),
   ws:
     ComplexDiagram(ZeroOrMore(Choice(0, OneOrMore(Terminal('[ \\t\\n\\r]')), NonTerminal('comment_to_eol', {href: '#comment_to_eol'}), NonTerminal('comment_c_style', {href: '#comment_c_style'})))),
+  white_to_eol:
+    ComplexDiagram(ZeroOrMore(Choice(0, OneOrMore(Terminal('[ \\t\\r]')), NonTerminal('comment_to_eol', {href: '#comment_to_eol'}), NonTerminal('comment_c_style', {href: '#comment_c_style'})))),
   s:
     ComplexDiagram(ZeroOrMore(NonTerminal('ws', {href: '#ws'}))),
   ss:
@@ -257,6 +277,8 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.BOM.addTo();</script></dd>
 <dt id='statement'>statement</dt>
   <dd><script>FimlRailroads.statement.addTo();</script></dd>
+<dt id='EOF'>EOF</dt>
+  <dd><script>FimlRailroads.EOF.addTo();</script></dd>
 <dt id='concept'>concept</dt>
   <dd><script>FimlRailroads.concept.addTo();</script></dd>
 <dt id='concept_declaration'>concept_declaration</dt>
@@ -265,12 +287,18 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.concept_supertype.addTo();</script></dd>
 <dt id='concept_type'>concept_type</dt>
   <dd><script>FimlRailroads.concept_type.addTo();</script></dd>
-<dt id='object_type_concept'>object_type_concept</dt>
-  <dd><script>FimlRailroads.object_type_concept.addTo();</script></dd>
-<dt id='data_type_concept'>data_type_concept</dt>
-  <dd><script>FimlRailroads.data_type_concept.addTo();</script></dd>
-<dt id='role_list'>role_list</dt>
-  <dd><script>FimlRailroads.role_list.addTo();</script></dd>
+<dt id='object_type_declaration'>object_type_declaration</dt>
+  <dd><script>FimlRailroads.object_type_declaration.addTo();</script></dd>
+<dt id='entity_type_declaration'>entity_type_declaration</dt>
+  <dd><script>FimlRailroads.entity_type_declaration.addTo();</script></dd>
+<dt id='fact_type_declaration'>fact_type_declaration</dt>
+  <dd><script>FimlRailroads.fact_type_declaration.addTo();</script></dd>
+<dt id='data_type_declaration'>data_type_declaration</dt>
+  <dd><script>FimlRailroads.data_type_declaration.addTo();</script></dd>
+<dt id='identifier_list'>identifier_list</dt>
+  <dd><script>FimlRailroads.identifier_list.addTo();</script></dd>
+<dt id='identifier'>identifier</dt>
+  <dd><script>FimlRailroads.identifier.addTo();</script></dd>
 <dt id='concept_property_list'>concept_property_list</dt>
   <dd><script>FimlRailroads.concept_property_list.addTo();</script></dd>
 <dt id='pronoun'>pronoun</dt>
@@ -281,10 +309,14 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.reading.addTo();</script></dd>
 <dt id='property'>property</dt>
   <dd><script>FimlRailroads.property.addTo();</script></dd>
+<dt id='property_reading'>property_reading</dt>
+  <dd><script>FimlRailroads.property_reading.addTo();</script></dd>
 <dt id='quantified_role'>quantified_role</dt>
   <dd><script>FimlRailroads.quantified_role.addTo();</script></dd>
 <dt id='role'>role</dt>
   <dd><script>FimlRailroads.role.addTo();</script></dd>
+<dt id='item'>item</dt>
+  <dd><script>FimlRailroads.item.addTo();</script></dd>
 <dt id='name'>name</dt>
   <dd><script>FimlRailroads.name.addTo();</script></dd>
 <dt id='preamble'>preamble</dt>
@@ -363,6 +395,10 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.property_template.addTo();</script></dd>
 <dt id='fact_template'>fact_template</dt>
   <dd><script>FimlRailroads.fact_template.addTo();</script></dd>
+<dt id='fact_template_loop'>fact_template_loop</dt>
+  <dd><script>FimlRailroads.fact_template_loop.addTo();</script></dd>
+<dt id='fact_template_step'>fact_template_step</dt>
+  <dd><script>FimlRailroads.fact_template_step.addTo();</script></dd>
 <dt id='generator'>generator</dt>
   <dd><script>FimlRailroads.generator.addTo();</script></dd>
 <dt id='with_generators'>with_generators</dt>
@@ -373,12 +409,16 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.data_type.addTo();</script></dd>
 <dt id='element_list'>element_list</dt>
   <dd><script>FimlRailroads.element_list.addTo();</script></dd>
+<dt id='element'>element</dt>
+  <dd><script>FimlRailroads.element.addTo();</script></dd>
 <dt id='value_type'>value_type</dt>
   <dd><script>FimlRailroads.value_type.addTo();</script></dd>
 <dt id='builtin_value_type'>builtin_value_type</dt>
   <dd><script>FimlRailroads.builtin_value_type.addTo();</script></dd>
 <dt id='expression'>expression</dt>
   <dd><script>FimlRailroads.expression.addTo();</script></dd>
+<dt id='accessor_expression'>accessor_expression</dt>
+  <dd><script>FimlRailroads.accessor_expression.addTo();</script></dd>
 <dt id='numeric_expression'>numeric_expression</dt>
   <dd><script>FimlRailroads.numeric_expression.addTo();</script></dd>
 <dt id='addition_operator'>addition_operator</dt>
@@ -389,8 +429,6 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.multiplication_operator.addTo();</script></dd>
 <dt id='numeric_factor'>numeric_factor</dt>
   <dd><script>FimlRailroads.numeric_factor.addTo();</script></dd>
-<dt id='accessor_expression'>accessor_expression</dt>
-  <dd><script>FimlRailroads.accessor_expression.addTo();</script></dd>
 <dt id='string_expression'>string_expression</dt>
   <dd><script>FimlRailroads.string_expression.addTo();</script></dd>
 <dt id='string_term'>string_term</dt>
@@ -457,6 +495,8 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.comment_c_style.addTo();</script></dd>
 <dt id='ws'>ws</dt>
   <dd><script>FimlRailroads.ws.addTo();</script></dd>
+<dt id='white_to_eol'>white_to_eol</dt>
+  <dd><script>FimlRailroads.white_to_eol.addTo();</script></dd>
 <dt id='s'>s</dt>
   <dd><script>FimlRailroads.s.addTo();</script></dd>
 <dt id='ss'>ss</dt>
