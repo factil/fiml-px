@@ -40,7 +40,7 @@ var FimlRailroads = {
   BOM:
     ComplexDiagram(Terminal('\\u{FEFF}')),
   statement:
-    ComplexDiagram(Sequence(Choice(0, NonTerminal('concept', {href: '#concept'}), NonTerminal('instance', {href: '#instance'}), NonTerminal('query', {href: '#query'}), NonTerminal('generator', {href: '#generator'})), NonTerminal('s', {href: '#s'}), Terminal('.'), NonTerminal('white_to_eol', {href: '#white_to_eol'}), Choice(0, Terminal('\\n'), NonTerminal('EOF', {href: '#EOF'})))),
+    ComplexDiagram(Sequence(Choice(0, NonTerminal('concept', {href: '#concept'}), NonTerminal('instance', {href: '#instance'}), NonTerminal('query', {href: '#query'}), NonTerminal('generator', {href: '#generator'})), NonTerminal('s', {href: '#s'}), Terminal('.'), Optional(NonTerminal('white_to_eol', {href: '#white_to_eol'})), Choice(0, Terminal('\\n'), NonTerminal('EOF', {href: '#EOF'})))),
   EOF:
     ComplexDiagram(Terminal('!any char')),
   concept:
@@ -82,7 +82,7 @@ var FimlRailroads = {
   item:
     ComplexDiagram(Choice(0, Sequence(NonTerminal('name', {href: '#name'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('name', {href: '#name'}), NonTerminal('s', {href: '#s'}), Terminal(')')))), Sequence(NonTerminal('adjective', {href: '#adjective'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('name', {href: '#name'})))),
   name:
-    ComplexDiagram(Sequence(Terminal('[\\U]'), OneOrMore(Terminal('[\\L\\d]')), ZeroOrMore(Sequence(NonTerminal('ss', {href: '#ss'}), Terminal('[\\U]'), OneOrMore(Terminal('[\\L\\d]')))))),
+    ComplexDiagram(Sequence(Terminal('[\\U]'), OneOrMore(Terminal('[\\L\\d]')), ZeroOrMore(Sequence(Sequence(NonTerminal('&ss', {href: '#ss'}), Terminal('[\\U]'), OneOrMore(Terminal('[\\L\\d]'))), NonTerminal('ss', {href: '#ss'}), Terminal('[\\U]'), OneOrMore(Terminal('[\\L\\d]')))))),
   preamble:
     ComplexDiagram(NonTerminal('predicate_words', {href: '#predicate_words'})),
   predicator:
@@ -130,7 +130,7 @@ var FimlRailroads = {
   object_selector:
     ComplexDiagram(Choice(0, NonTerminal('keyed_expression_list', {href: '#keyed_expression_list'}), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('fact_template', {href: '#fact_template'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
   subject:
-    ComplexDiagram(Choice(0, NonTerminal('relative_pronoun', {href: '#relative_pronoun'}), Sequence(Optional(NonTerminal('object_template', {href: '#object_template'})), NonTerminal('ss', {href: '#ss'}), NonTerminal('variable', {href: '#variable'})))),
+    ComplexDiagram(Choice(0, NonTerminal('relative_pronoun', {href: '#relative_pronoun'}), Sequence(Optional(Sequence(NonTerminal('object_template', {href: '#object_template'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('variable', {href: '#variable'})))),
   relative_pronoun:
     ComplexDiagram(Choice(0, Terminal('that'), Terminal('who'))),
   variable:
@@ -257,14 +257,14 @@ var FimlRailroads = {
     ComplexDiagram(Sequence(Terminal('//'), ZeroOrMore(Sequence(Terminal('!\\n'), Terminal('any char'))))),
   comment_c_style:
     ComplexDiagram(Sequence(Terminal('/*'), ZeroOrMore(Sequence(Terminal('!*/'), Terminal('any char'))), Terminal('*/'))),
-  ws:
-    ComplexDiagram(ZeroOrMore(Choice(0, OneOrMore(Terminal('[ \\t\\n\\r]')), NonTerminal('comment_to_eol', {href: '#comment_to_eol'}), NonTerminal('comment_c_style', {href: '#comment_c_style'})))),
+  whitespace:
+    ComplexDiagram(Choice(0, OneOrMore(Terminal('[ \\t\\n\\r]')), NonTerminal('comment_to_eol', {href: '#comment_to_eol'}), NonTerminal('comment_c_style', {href: '#comment_c_style'}))),
   white_to_eol:
-    ComplexDiagram(ZeroOrMore(Choice(0, OneOrMore(Terminal('[ \\t\\r]')), NonTerminal('comment_to_eol', {href: '#comment_to_eol'}), NonTerminal('comment_c_style', {href: '#comment_c_style'})))),
+    ComplexDiagram(Choice(0, OneOrMore(Terminal('[ \\t\\r]')), NonTerminal('comment_to_eol', {href: '#comment_to_eol'}), Sequence(NonTerminal('comment_c_style', {href: '#comment_c_style'}), NonTerminal('white_to_eol', {href: '#white_to_eol'})))),
   s:
-    ComplexDiagram(ZeroOrMore(NonTerminal('ws', {href: '#ws'}))),
+    ComplexDiagram(ZeroOrMore(NonTerminal('whitespace', {href: '#whitespace'}))),
   ss:
-    ComplexDiagram(OneOrMore(NonTerminal('ws', {href: '#ws'})))
+    ComplexDiagram(OneOrMore(NonTerminal('whitespace', {href: '#whitespace'})))
 };
 </script>
 </head>
@@ -493,8 +493,8 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.comment_to_eol.addTo();</script></dd>
 <dt id='comment_c_style'>comment_c_style</dt>
   <dd><script>FimlRailroads.comment_c_style.addTo();</script></dd>
-<dt id='ws'>ws</dt>
-  <dd><script>FimlRailroads.ws.addTo();</script></dd>
+<dt id='whitespace'>whitespace</dt>
+  <dd><script>FimlRailroads.whitespace.addTo();</script></dd>
 <dt id='white_to_eol'>white_to_eol</dt>
   <dd><script>FimlRailroads.white_to_eol.addTo();</script></dd>
 <dt id='s'>s</dt>

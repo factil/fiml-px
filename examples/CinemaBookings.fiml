@@ -2,7 +2,7 @@
  * Value Types
  */
 Each Cinema Id is written as Number.
-Each DateTime Value is written as Date Time.
+/* not required: Each DateTime Value is written as Date Time. */
 Each Film Id is written as Number.
 Each Name is written as String.
 Each Seat Count is written as Number /* unsupported: Unsigned Integer(16) restricted to {1..} */.
@@ -22,7 +22,7 @@ Each Film is identified by Film Id and it
   has at most one Name.
 
 Each Person is identified by Person Id and it
-  has one login- Name / Name is of at most one Person.
+  has one login- Name / login- Name is of at most one Person.
 
 Each Row is identified by Cinema, Row Nr and it
 	is in one Cinema / Cinema contains Row,
@@ -47,8 +47,8 @@ and it
   has Status.
 
 Each Seat Allocation is where
-	Booking has allocated-Seat/
-	Seat is allocated to Booking.
+	Booking has allocated- Seat/
+	Allocated Seat is allocated to Booking.
 
 /*
  * Constraints:

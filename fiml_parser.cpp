@@ -27,7 +27,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "statement",
-	  "(|<concept>|<instance>|<query>|<generator>)<s>\\.<white_to_eol>(|\\n|<EOF>)",
+	  "(|<concept>|<instance>|<query>|<generator>)<s>\\.?<white_to_eol>(|\\n|<EOF>)",
 	  0
 	},
 	{ "EOF",
@@ -111,7 +111,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "name",
-	  "[\\U]+[\\L\\d]*(<ss>[\\U]+[\\L\\d])",
+	  "[\\U]+[\\L\\d]*(&(<ss>[\\U]+[\\L\\d])<ss>[\\U]+[\\L\\d])",
 	  0
 	},
 	{ "preamble",
@@ -207,7 +207,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "subject",
-	  "|<relative_pronoun>|?<object_template><ss><variable>",
+	  "|<relative_pronoun>|?(<object_template><ss>)<variable>",
 	  0
 	},
 	{ "relative_pronoun",
@@ -462,20 +462,20 @@ FimlParser::Rule	FimlParser::rules[] =
 	  "/\\**(!(\\*/).)\\*/",
 	  0
 	},
-	{ "ws",
-	  "*(|+[ \\t\\n\\r]|<comment_to_eol>|<comment_c_style>)",
+	{ "whitespace",
+	  "|+[ \\t\\n\\r]|<comment_to_eol>|<comment_c_style>",
 	  0
 	},
 	{ "white_to_eol",
-	  "*(|+[ \\t\\r]|<comment_to_eol>|<comment_c_style>)",
+	  "|+[ \\t\\r]|<comment_to_eol>|<comment_c_style><white_to_eol>",
 	  0
 	},
 	{ "s",
-	  "*<ws>",
+	  "*<whitespace>",
 	  0
 	},
 	{ "ss",
-	  "+<ws>",
+	  "+<whitespace>",
 	  0
 	}
 };

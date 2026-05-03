@@ -16,7 +16,7 @@ statement =
 		| instance
 		| query
 		| generator
-	) s '.' white_to_eol (| '\n' | EOF)
+	) s '.' ?white_to_eol (| '\n' | EOF)
 
 EOF =					// End of file is where nothing follows
 	!.
@@ -94,7 +94,8 @@ item =
 	| adjective ss name
 
 name = 
-	[\U] +[\L\d] *(ss [\U] +[\L\d])
+  // 	[\U] +[\L\d] *(ss [\U] +[\L\d])
+	[\U] +[\L\d] *(&(ss [\U] +[\L\d]) ss [\U] +[\L\d])
 
 preamble =
 	predicate_words
@@ -188,7 +189,7 @@ object_selector =
 
 subject =
 	| relative_pronoun
-	| ?object_template ss variable
+	| ?(object_template ss) variable
 
 relative_pronoun =
 	| 'that'
@@ -457,18 +458,16 @@ comment_to_eol =
 comment_c_style =
   '/*' *(!'*/' . ) '*/'
 
-ws =	*(			// Optional space
-	  | +[ \t\n\r]		// one or more spaces
-	  | comment_to_eol
-	  | comment_c_style
-	)
+whitespace =
+	| +[ \t\n\r]		    // one or more spaces
+	| comment_to_eol
+	| comment_c_style
 
-white_to_eol = 	*(			// ws except for \n
-	  | +[ \t\r]		      // one or more inline spaces
-	  | comment_to_eol
-	  | comment_c_style
-	)
+white_to_eol =			  // whitespace except for \n
+	| +[ \t\r]		      // one or more inline spaces
+	| comment_to_eol
+	| comment_c_style white_to_eol
 	
-s = *ws		  // Optional space
+s = *whitespace		  // Optional space
 
-ss = +ws	  // Mandatory space
+ss = +whitespace	  // Mandatory space
