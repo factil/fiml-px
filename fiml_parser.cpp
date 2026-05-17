@@ -171,7 +171,11 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "query",
-	  "?(<with_generators><ss>)[Ff]or<ss>each<ss><path><path_control><s>=><s><selector>",
+	  "?(<with_generators><ss>)<for_each><ss><path><path_control><s>=><s><selector>",
+	  0
+	},
+	{ "for_each",
+	  "[Ff]or<ss>each",
 	  0
 	},
 	{ "path",
@@ -267,7 +271,11 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "with_generators",
-	  "[Ww]ith<ss><generator_list>",
+	  "<with><ss><generator_list>",
+	  0
+	},
+	{ "with",
+	  "[Ww]ith",
 	  0
 	},
 	{ "generator_list",

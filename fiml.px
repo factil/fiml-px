@@ -162,7 +162,10 @@ key =
 //
 
 query =
-	?(with_generators ss) [Ff] 'or' ss 'each' ss path path_control s '=>' s selector
+	?(with_generators ss) for_each ss path path_control s '=>' s selector
+
+for_each =
+	[Ff] 'or' ss 'each'
 
 path =
 	object_template ss variable ss step_body *( sep step )
@@ -247,7 +250,10 @@ generator =
 	name ':' ss '(' s query s ')'
 
 with_generators = 
-	[Ww] 'ith' ss generator_list
+	with ss generator_list
+
+with =
+	[Ww] 'ith'
 
 generator_list =
 	generator +(sep generator)

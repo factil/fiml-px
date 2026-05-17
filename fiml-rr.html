@@ -112,7 +112,9 @@ var FimlRailroads = {
   key:
     ComplexDiagram(Sequence(Terminal('[\\L]'), ZeroOrMore(Terminal('[\\L\\d]')), ZeroOrMore(Sequence(Terminal('[_]'), Terminal('[\\L]'), ZeroOrMore(Terminal('[\\L\\d]')))))),
   query:
-    ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('with_generators', {href: '#with_generators'}), NonTerminal('ss', {href: '#ss'}))), Terminal('[Ff]'), Terminal('or'), NonTerminal('ss', {href: '#ss'}), Terminal('each'), NonTerminal('ss', {href: '#ss'}), NonTerminal('path', {href: '#path'}), NonTerminal('path_control', {href: '#path_control'}), NonTerminal('s', {href: '#s'}), Terminal('=>'), NonTerminal('s', {href: '#s'}), NonTerminal('selector', {href: '#selector'}))),
+    ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('with_generators', {href: '#with_generators'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('for_each', {href: '#for_each'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('path', {href: '#path'}), NonTerminal('path_control', {href: '#path_control'}), NonTerminal('s', {href: '#s'}), Terminal('=>'), NonTerminal('s', {href: '#s'}), NonTerminal('selector', {href: '#selector'}))),
+  for_each:
+    ComplexDiagram(Sequence(Terminal('[Ff]'), Terminal('or'), NonTerminal('ss', {href: '#ss'}), Terminal('each'))),
   path:
     ComplexDiagram(Sequence(NonTerminal('object_template', {href: '#object_template'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('variable', {href: '#variable'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('step_body', {href: '#step_body'}), ZeroOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('step', {href: '#step'}))))),
   step:
@@ -160,7 +162,9 @@ var FimlRailroads = {
   generator:
     ComplexDiagram(Sequence(NonTerminal('name', {href: '#name'}), Terminal(':'), NonTerminal('ss', {href: '#ss'}), Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('query', {href: '#query'}), NonTerminal('s', {href: '#s'}), Terminal(')'))),
   with_generators:
-    ComplexDiagram(Sequence(Terminal('[Ww]'), Terminal('ith'), NonTerminal('ss', {href: '#ss'}), NonTerminal('generator_list', {href: '#generator_list'}))),
+    ComplexDiagram(Sequence(NonTerminal('with', {href: '#with'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('generator_list', {href: '#generator_list'}))),
+  with:
+    ComplexDiagram(Sequence(Terminal('[Ww]'), Terminal('ith'))),
   generator_list:
     ComplexDiagram(Sequence(NonTerminal('generator', {href: '#generator'}), OneOrMore(Sequence(NonTerminal('sep', {href: '#sep'}), NonTerminal('generator', {href: '#generator'}))))),
   data_type:
@@ -347,6 +351,8 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.key.addTo();</script></dd>
 <dt id='query'>query</dt>
   <dd><script>FimlRailroads.query.addTo();</script></dd>
+<dt id='for_each'>for_each</dt>
+  <dd><script>FimlRailroads.for_each.addTo();</script></dd>
 <dt id='path'>path</dt>
   <dd><script>FimlRailroads.path.addTo();</script></dd>
 <dt id='step'>step</dt>
@@ -395,6 +401,8 @@ var FimlRailroads = {
   <dd><script>FimlRailroads.generator.addTo();</script></dd>
 <dt id='with_generators'>with_generators</dt>
   <dd><script>FimlRailroads.with_generators.addTo();</script></dd>
+<dt id='with'>with</dt>
+  <dd><script>FimlRailroads.with.addTo();</script></dd>
 <dt id='generator_list'>generator_list</dt>
   <dd><script>FimlRailroads.generator_list.addTo();</script></dd>
 <dt id='data_type'>data_type</dt>
