@@ -7,9 +7,6 @@ TOP	=
 	*(?s statement)
 	-> bom, statement
 
-BOM	=
-	  '\uFEFF'
-
 statement =
 	(
 		| concept
@@ -17,9 +14,6 @@ statement =
 		| query
 		| generator
 	) s '.' ?white_to_eol (| '\n' | EOF)
-
-EOF =					// End of file is where nothing follows
-	!.
 
 //
 // Concept rules
@@ -57,7 +51,7 @@ identifier_list =
 	identifier *(sep identifier)
 
 identifier =
-	item
+	role
 
 concept_property_list =
 	'and' ss pronoun ss property *(sep property)
@@ -87,9 +81,6 @@ quantified_role =
 	?(quantifier ss) role
 
 role =
-	item
-
-item =
 	| name ?(ss '(' s name s ')')
 	| adjective ss name
 
@@ -191,7 +182,8 @@ object_selector =
 
 subject =
 	| relative_pronoun
-	| ?(object_template ss) variable
+	| object_template ss variable
+	| accessor_chain
 
 relative_pronoun =
 	| 'that'
@@ -273,7 +265,7 @@ element_list =
 	'{' s element *( sep element) s '}'
 
 element =
-	item
+	role
 
 value_type =
 	builtin_value_type
@@ -289,12 +281,12 @@ builtin_value_type =
 //
 
 expression =
-	| accessor_expression
+	| accessor_chain
 	| numeric_expression
 	| string_expression
 	| boolean_expression
 
-accessor_expression =
+accessor_chain =
 	variable *(| '.' key | '[' s numeric_expression s ']')
 
 numeric_expression =
@@ -313,7 +305,7 @@ multiplication_operator =
 
 numeric_factor =
 	| number
-	| ?'-' accessor_expression
+	| ?'-' accessor_chain
 	| '(' s numeric_expression s ')'
 
 string_expression =
@@ -321,7 +313,7 @@ string_expression =
 
 string_term =
 	| string_literal
-	| accessor_expression
+	| accessor_chain
 	| '(' s string_expression s ')'
 
 boolean_expression =
@@ -336,7 +328,7 @@ not_expression =
 boolean_factor =
 	| boolean_literal
 	| comparison
-	| accessor_expression
+	| accessor_chain
 	| 'exists' ss '(' s query s ')'
 	| '(' s boolean_expression s ')'
 
@@ -473,3 +465,9 @@ white_to_eol =			  // whitespace except for \n
 s = *whitespace		  // Optional space
 
 ss = +whitespace	  // Mandatory space
+
+BOM	=
+	  '\uFEFF'
+
+EOF =					// End of file is where nothing follows
+	!.

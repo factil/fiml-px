@@ -64,3 +64,6 @@ Each Seat Allocation is where
 For each Booking(Person P booked Session(Cinema C shows Film F on Session Time ST) S for Seat Count SC of seats) B has allocated Seat AS,
 	C contains Row R, that contains AS
   => {cinema_id: C.cinema_id, row_id: R.row_id, seat_number: AS.seat_number}.
+
+For each Booking B has allocated Seat AS, B.session.cinema contains Row R, that contains AS
+  => {cinema_id: C.cinema_id, row_id: R.row_id, seat_number: AS.seat_number}.

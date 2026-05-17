@@ -22,16 +22,8 @@ FimlParser::Rule	FimlParser::rules[] =
 	  "?(<BOM>:bom:)*(?<s><statement>)",
 	  TOP_captures
 	},
-	{ "BOM",
-	  "\\uFEFF",
-	  0
-	},
 	{ "statement",
 	  "(|<concept>|<instance>|<query>|<generator>)<s>\\.?<white_to_eol>(|\\n|<EOF>)",
-	  0
-	},
-	{ "EOF",
-	  "!.",
 	  0
 	},
 	{ "concept",
@@ -71,7 +63,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "identifier",
-	  "<item>",
+	  "<role>",
 	  0
 	},
 	{ "concept_property_list",
@@ -103,10 +95,6 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "role",
-	  "<item>",
-	  0
-	},
-	{ "item",
 	  "|<name>?(<ss>\\(<s><name><s>\\))|<adjective><ss><name>",
 	  0
 	},
@@ -207,7 +195,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "subject",
-	  "|<relative_pronoun>|?(<object_template><ss>)<variable>",
+	  "|<relative_pronoun>|<object_template><ss><variable>|<accessor_chain>",
 	  0
 	},
 	{ "relative_pronoun",
@@ -295,7 +283,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "element",
-	  "<item>",
+	  "<role>",
 	  0
 	},
 	{ "value_type",
@@ -307,10 +295,10 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "expression",
-	  "|<accessor_expression>|<numeric_expression>|<string_expression>|<boolean_expression>",
+	  "|<accessor_chain>|<numeric_expression>|<string_expression>|<boolean_expression>",
 	  0
 	},
-	{ "accessor_expression",
+	{ "accessor_chain",
 	  "<variable>*(|\\.<key>|\\[<s><numeric_expression><s>\\])",
 	  0
 	},
@@ -331,7 +319,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "numeric_factor",
-	  "|<number>|?-<accessor_expression>|\\(<s><numeric_expression><s>\\)",
+	  "|<number>|?-<accessor_chain>|\\(<s><numeric_expression><s>\\)",
 	  0
 	},
 	{ "string_expression",
@@ -339,7 +327,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "string_term",
-	  "|<string_literal>|<accessor_expression>|\\(<s><string_expression><s>\\)",
+	  "|<string_literal>|<accessor_chain>|\\(<s><string_expression><s>\\)",
 	  0
 	},
 	{ "boolean_expression",
@@ -355,7 +343,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "boolean_factor",
-	  "|<boolean_literal>|<comparison>|<accessor_expression>|exists<ss>\\(<s><query><s>\\)|\\(<s><boolean_expression><s>\\)",
+	  "|<boolean_literal>|<comparison>|<accessor_chain>|exists<ss>\\(<s><query><s>\\)|\\(<s><boolean_expression><s>\\)",
 	  0
 	},
 	{ "comparison",
@@ -476,6 +464,14 @@ FimlParser::Rule	FimlParser::rules[] =
 	},
 	{ "ss",
 	  "+<whitespace>",
+	  0
+	},
+	{ "BOM",
+	  "\\uFEFF",
+	  0
+	},
+	{ "EOF",
+	  "!.",
 	  0
 	}
 };
