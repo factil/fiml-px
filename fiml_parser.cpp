@@ -139,7 +139,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "quantifier",
-	  "|one|at<ss>most<ss>one|at<ss>least<ss>one|many",
+	  "|one|at<ss>most<ss>one|at<ss>least<ss>one|many|where|group<ss>by",
 	  0
 	},
 	{ "instance",
@@ -199,7 +199,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "object_template",
-	  "<name>?(<ss><object_selector>)",
+	  "<name>?(<object_selector>)",
 	  0
 	},
 	{ "object_selector",
@@ -219,7 +219,7 @@ FimlParser::Rule	FimlParser::rules[] =
 	  0
 	},
 	{ "roled_expression",
-	  "|<object_template>|?(<name><ss>)<expression>",
+	  "|<object_template><ss><variable>|?(<name><ss>)<expression>",
 	  0
 	},
 	{ "path_control",

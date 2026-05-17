@@ -121,6 +121,8 @@ quantifier =
 	| 'at' ss 'most' ss 'one'
 	| 'at' ss 'least' ss 'one'
 	| 'many'
+	| 'where'
+	| 'group' ss 'by'
 
 //
 // Instance rules
@@ -181,7 +183,7 @@ step_body =
 	predicator ss roled_expression ?(ss postamble)
 
 object_template =
-	name ?(ss object_selector)
+	name ?(object_selector)
 
 object_selector =
 	| keyed_expression_list
@@ -199,7 +201,7 @@ variable =
 	+[\U]
 
 roled_expression =
-	| object_template
+	| object_template ss variable
 	| ?(name ss) expression
 
 path_control = 

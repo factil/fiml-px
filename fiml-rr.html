@@ -96,7 +96,7 @@ var FimlRailroads = {
   adjective:
     ComplexDiagram(Sequence(OneOrMore(Terminal('[\\L]')), Terminal('-'), ZeroOrMore(Sequence(NonTerminal('ss', {href: '#ss'}), OneOrMore(Terminal('[\\L]')))))),
   quantifier:
-    ComplexDiagram(Choice(0, Terminal('one'), Sequence(Terminal('at'), NonTerminal('ss', {href: '#ss'}), Terminal('most'), NonTerminal('ss', {href: '#ss'}), Terminal('one')), Sequence(Terminal('at'), NonTerminal('ss', {href: '#ss'}), Terminal('least'), NonTerminal('ss', {href: '#ss'}), Terminal('one')), Terminal('many'))),
+    ComplexDiagram(Choice(0, Terminal('one'), Sequence(Terminal('at'), NonTerminal('ss', {href: '#ss'}), Terminal('most'), NonTerminal('ss', {href: '#ss'}), Terminal('one')), Sequence(Terminal('at'), NonTerminal('ss', {href: '#ss'}), Terminal('least'), NonTerminal('ss', {href: '#ss'}), Terminal('one')), Terminal('many'), Terminal('where'), Sequence(Terminal('group'), NonTerminal('ss', {href: '#ss'}), Terminal('by')))),
   instance:
     ComplexDiagram(Sequence(NonTerminal('name', {href: '#name'}), Terminal(':'), NonTerminal('ss', {href: '#ss'}), NonTerminal('instance_body', {href: '#instance_body'}))),
   instance_body:
@@ -126,7 +126,7 @@ var FimlRailroads = {
   step_body:
     ComplexDiagram(Sequence(NonTerminal('predicator', {href: '#predicator'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('roled_expression', {href: '#roled_expression'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('postamble', {href: '#postamble'}))))),
   object_template:
-    ComplexDiagram(Sequence(NonTerminal('name', {href: '#name'}), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('object_selector', {href: '#object_selector'}))))),
+    ComplexDiagram(Sequence(NonTerminal('name', {href: '#name'}), Optional(NonTerminal('object_selector', {href: '#object_selector'})))),
   object_selector:
     ComplexDiagram(Choice(0, NonTerminal('keyed_expression_list', {href: '#keyed_expression_list'}), Sequence(Terminal('('), NonTerminal('s', {href: '#s'}), NonTerminal('fact_template', {href: '#fact_template'}), NonTerminal('s', {href: '#s'}), Terminal(')')))),
   subject:
@@ -136,7 +136,7 @@ var FimlRailroads = {
   variable:
     ComplexDiagram(OneOrMore(Terminal('[\\U]'))),
   roled_expression:
-    ComplexDiagram(Choice(0, NonTerminal('object_template', {href: '#object_template'}), Sequence(Optional(Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('expression', {href: '#expression'})))),
+    ComplexDiagram(Choice(0, Sequence(NonTerminal('object_template', {href: '#object_template'}), NonTerminal('ss', {href: '#ss'}), NonTerminal('variable', {href: '#variable'})), Sequence(Optional(Sequence(NonTerminal('name', {href: '#name'}), NonTerminal('ss', {href: '#ss'}))), NonTerminal('expression', {href: '#expression'})))),
   path_control:
     ComplexDiagram(Sequence(Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('where_condition', {href: '#where_condition'}))), Optional(Sequence(NonTerminal('ss', {href: '#ss'}), NonTerminal('grouping', {href: '#grouping'}))))),
   where_condition:

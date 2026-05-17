@@ -4,6 +4,7 @@
 Each Cinema Id is written as Number.
 /* not required: Each DateTime Value is written as Date Time. */
 Each Film Id is written as Number.
+Each Session Time is written as Date Time.
 Each Name is written as String.
 Each Seat Count is written as Number /* unsupported: Unsigned Integer(16) restricted to {1..} */.
 Each Person Id is written as Number.
@@ -36,9 +37,9 @@ Each Section is identified by Section Name and it
 	contains many Seats / Seat is in at most one Section.
 
 Each Session is where
-	Cinema shows Film on many Date Times /
-	Film is showing on Date Time at many Cinemas /
-	Cinema at Date Time is showing one Film.
+	Cinema shows Film on many Session Times /
+	Film is showing on Session Time at many Cinemas /
+	Cinema at Session Time is showing many Films.
 
 Each Booking is where
 	Person booked Session for one Seat Count of seats /
@@ -53,11 +54,13 @@ Each Seat Allocation is where
 /*
  * Constraints:
  */
-// Booking (in which Person booked Session (in which Cinema shows Film on Date Time) for Seat Count of seats) has allocated Seat
+// CQL:
+// Booking (in which Person booked Session (in which Cinema shows Film on Session Time) for Seat Count of seats) has allocated Seat
 // 	only if Cinema contains Row that contains Seat.
 
-// As query: Find bookings where 
 
-For each Booking (Person P booked Session S for Seat Count SC of seats) B has allocated Seat ST
-  where not (B.session.cinema contains Row R, that contains ST)
-  => B.
+// As query: Find cinema, row, seat for seat allocated to a booking
+
+For each Booking(Person P booked Session(Cinema C shows Film F on Session Time ST) S for Seat Count SC of seats) B has allocated Seat AS,
+	C contains Row R, that contains AS
+  => {cinema_id: C.cinema_id, row_id: R.row_id, seat_number: AS.seat_number}.
